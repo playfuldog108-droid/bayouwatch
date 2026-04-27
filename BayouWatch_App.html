@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BayouWatch — Houston Flood Alert System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-deep: #050b14;
+    --bg-panel: #0a1422;
+    --bg-elev: #0f1d31;
+    --bg-card: #122842;
+    --border: #1d3654;
+    --border-bright: #2a4f7a;
+    --text-primary: #e6f1ff;
+    --text-secondary: #8ba9c8;
+    --text-dim: #4a6889;
+    --accent-cyan: #00e5ff;
+    --accent-cyan-dim: #00b8cc;
+    --accent-amber: #ffb547;
+    --accent-red: #ff3860;
+    --accent-green: #00d97e;
+    --accent-blue: #2196f3;
+    --grad-water: linear-gradient(135deg, #001b3d 0%, #003a8c 50%, #0066cc 100%);
+    --shadow-glow: 0 0 24px rgba(0, 229, 255, 0.15);
+    --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Inter Tight', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: var(--body);
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(0, 102, 204, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(0, 229, 255, 0.06) 0%, transparent 40%);
+  }
+
+  /* ─── Layout ─── */
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr 360px;
+    grid-template-rows: 60px 1fr;
+    grid-template-areas:
+      "header header header"
+      "sidebar main right";
+    height: 100vh;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    grid-area: header;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 24px;
+    z-index: 10;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    box-shadow: var(--shadow-glow);
+    position: relative;
+  }
+  .logo-mark::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 2px solid var(--bg-deep);
+    border-radius: 4px;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    transform: rotate(-45deg);
+  }
+  .logo-text { color: var(--text-primary); }
+  .logo-text span { color: var(--accent-cyan); }
+
+  .system-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 217, 126, 0.1);
+    border: 1px solid rgba(0, 217, 126, 0.3);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-green);
+  }
+  .pulse-dot {
+    width: 8px; height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 217, 126, 0.7); }
+    50% { box-shadow: 0 0 0 6px rgba(0, 217, 126, 0); }
+  }
+
+  .header-spacer { flex: 1; }
+
+  .header-meta {
+    display: flex;
+    gap: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .header-meta b { color: var(--text-primary); font-weight: 500; }
+
+  .lang-select {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    overflow-y: auto;
+  }
+  .nav-section {
+    padding: 0 16px;
+    margin-bottom: 24px;
+  }
+  .nav-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    padding: 0 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    user-select: none;
+  }
+  .nav-item:hover {
+    background: var(--bg-elev);
+    color: var(--text-primary);
+  }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(0, 229, 255, 0.15), transparent);
+    color: var(--accent-cyan);
+    border-left: 2px solid var(--accent-cyan);
+    padding-left: 10px;
+  }
+  .nav-icon {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    stroke-width: 2;
+  }
+
+  .neighborhood-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .neighborhood-card:hover {
+    border-color: var(--accent-cyan);
+    transform: translateY(-1px);
+  }
+  .neighborhood-card.alert {
+    border-color: var(--accent-red);
+    background: rgba(255, 56, 96, 0.05);
+    animation: alertPulse 2s infinite;
+  }
+  @keyframes alertPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 56, 96, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(255, 56, 96, 0); }
+  }
+  .nh-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nh-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .status-safe {
+    background: rgba(0, 217, 126, 0.15);
+    color: var(--accent-green);
+  }
+  .status-watch {
+    background: rgba(255, 181, 71, 0.15);
+    color: var(--accent-amber);
+  }
+  .status-alert {
+    background: rgba(255, 56, 96, 0.15);
+    color: var(--accent-red);
+  }
+  .nh-meter {
+    height: 4px;
+    background: var(--bg-deep);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .nh-meter-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+  .nh-readout {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ─── Main Content ─── */
+  .main {
+    grid-area: main;
+    overflow: hidden;
+    position: relative;
+  }
+  .view {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+    display: none;
+  }
+  .view.active { display: block; }
+
+  .view-header {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .view-title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .view-subtitle {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* ─── Map View ─── */
+  .map-container {
+    position: relative;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    height: calc(100% - 80px);
+    min-height: 500px;
+  }
+  .map-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  .map-svg:active { cursor: grabbing; }
+
+  .sensor-dot {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sensor-dot:hover { r: 8; }
+
+  .map-overlay {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(10, 20, 34, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .map-overlay strong { color: var(--accent-cyan); }
+
+  .map-legend {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(10, 20, 34, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 11px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-family: var(--mono);
+  }
+  .legend-item:last-child { margin-bottom: 0; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ─── Dashboard ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent-cyan);
+  }
+  .stat-card.alert::before { background: var(--accent-red); }
+  .stat-card.warn::before { background: var(--accent-amber); }
+  .stat-card.ok::before { background: var(--accent-green); }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-trend {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trend-up { color: var(--accent-red); }
+  .trend-down { color: var(--accent-green); }
+
+  .dash-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* Live chart */
+  .chart {
+    height: 200px;
+    position: relative;
+  }
+  .chart-svg { width: 100%; height: 100%; }
+  .chart-line {
+    fill: none;
+    stroke: var(--accent-cyan);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.5));
+  }
+  .chart-area {
+    fill: url(#chartGrad);
+    opacity: 0.4;
+  }
+  .threshold-line {
+    stroke: var(--accent-red);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+    opacity: 0.7;
+  }
+
+  /* ─── Right panel: Alerts ─── */
+  .right-panel {
+    grid-area: right;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .right-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .right-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+  }
+  .alerts-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .alert-item {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-cyan);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    animation: slideIn 0.3s ease-out;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .alert-item.critical {
+    border-left-color: var(--accent-red);
+    background: rgba(255, 56, 96, 0.05);
+  }
+  .alert-item.warning {
+    border-left-color: var(--accent-amber);
+  }
+  .alert-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .alert-severity { font-weight: 700; }
+  .alert-severity.critical { color: var(--accent-red); }
+  .alert-severity.warning { color: var(--accent-amber); }
+  .alert-severity.info { color: var(--accent-cyan); }
+  .alert-message {
+    font-size: 12px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .alert-location {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ─── Address lookup ─── */
+  .lookup-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elev) 100%);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .lookup-input {
+    width: 100%;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: var(--body);
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  .lookup-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+  }
+  .lookup-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--accent-cyan);
+    color: var(--bg-deep);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--body);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lookup-button:hover {
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 229, 255, 0.4);
+  }
+
+  .lookup-result {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-deep);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .lookup-result.show { display: block; animation: slideIn 0.3s; }
+  .lookup-result-status {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .lookup-result-status.safe { color: var(--accent-green); }
+  .lookup-result-status.watch { color: var(--accent-amber); }
+  .lookup-result-status.alert { color: var(--accent-red); }
+
+  /* Simulation view */
+  .sim-controls {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .sim-button {
+    background: var(--accent-cyan);
+    color: var(--bg-deep);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+  .sim-button:hover { background: #fff; }
+  .sim-button.danger { background: var(--accent-red); color: white; }
+  .sim-button.danger:hover { background: #ff5577; }
+  .sim-button:disabled {
+    background: var(--bg-elev);
+    color: var(--text-dim);
+    cursor: not-allowed;
+  }
+  .sim-time {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent-cyan);
+    flex: 1;
+  }
+  .sim-progress {
+    height: 4px;
+    background: var(--bg-deep);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .sim-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-red));
+    transition: width 0.3s;
+  }
+
+  /* Sensor detail modal */
+  .sensor-detail {
+    position: absolute;
+    background: var(--bg-card);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 200px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 5;
+  }
+  .sensor-detail.show { opacity: 1; }
+  .sensor-detail-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+  }
+  .sensor-detail-name {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .sensor-detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .sensor-detail-row span:first-child { color: var(--text-dim); }
+  .sensor-detail-row span:last-child { color: var(--text-primary); font-weight: 500; }
+
+  /* Settings view */
+  .settings-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label {
+    font-weight: 500;
+  }
+  .setting-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: var(--bg-elev);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid var(--border);
+  }
+  .toggle.on { background: var(--accent-cyan); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 22px; }
+
+  /* About view */
+  .about-hero {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elev) 100%);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-hero::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.15), transparent 70%);
+    pointer-events: none;
+  }
+  .about-title {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+  }
+  .about-title em {
+    color: var(--accent-cyan);
+    font-style: italic;
+  }
+  .about-text {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 600px;
+  }
+  .about-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .feature-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .feature-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: rgba(0, 229, 255, 0.1);
+    display: grid; place-items: center;
+    margin-bottom: 12px;
+  }
+  .feature-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .feature-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+  /* Banner alert (full-screen on critical) */
+  .crisis-banner {
+    position: fixed;
+    top: 60px; left: 0; right: 0;
+    background: linear-gradient(90deg, var(--accent-red) 0%, #c2185b 100%);
+    color: white;
+    padding: 12px 20px;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 12px rgba(255, 56, 96, 0.4);
+    animation: slideDown 0.4s ease-out;
+  }
+  .crisis-banner.show { display: flex; }
+  @keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+  }
+  .crisis-banner-icon {
+    font-size: 24px;
+    animation: shake 0.5s infinite;
+  }
+  @keyframes shake {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+  }
+  .crisis-banner-text {
+    flex: 1;
+    font-weight: 600;
+  }
+  .crisis-banner-time {
+    font-family: var(--mono);
+    font-weight: 700;
+    background: rgba(0,0,0,0.2);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .crisis-banner-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  @media (max-width: 1100px) {
+    .app { grid-template-columns: 200px 1fr 320px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .about-features { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="crisisBanner" class="crisis-banner">
+  <div class="crisis-banner-icon">⚠</div>
+  <div class="crisis-banner-text" id="crisisText">FLOOD ALERT — Action required</div>
+  <div class="crisis-banner-time" id="crisisTime">45 MIN</div>
+  <button class="crisis-banner-close" onclick="document.getElementById('crisisBanner').classList.remove('show')">×</button>
+</div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <div class="logo-text">Bayou<span>Watch</span></div>
+    </div>
+    <div class="system-status">
+      <div class="pulse-dot"></div>
+      <span id="systemStatusText">SYSTEM ONLINE</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-meta">
+      <div>SENSORS: <b id="sensorCount">--/47</b></div>
+      <div>UPTIME: <b id="uptime">99.97%</b></div>
+      <div>UTC: <b id="clock">--:--:--</b></div>
+    </div>
+    <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+      <option value="en">EN — English</option>
+      <option value="es">ES — Español</option>
+      <option value="vi">VI — Tiếng Việt</option>
+      <option value="zh">ZH — 中文</option>
+      <option value="ar">AR — العربية</option>
+    </select>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <div class="nav-item active" data-view="dashboard">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span data-i18n="dashboard">Dashboard</span>
+      </div>
+      <div class="nav-item" data-view="map">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        <span data-i18n="liveMap">Live Map</span>
+      </div>
+      <div class="nav-item" data-view="lookup">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <span data-i18n="checkAddress">Check My Address</span>
+      </div>
+      <div class="nav-item" data-view="simulation">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><circle cx="12" cy="12" r="9" stroke-linejoin="round"/></svg>
+        <span data-i18n="simulation">Harvey Simulation</span>
+      </div>
+      <div class="nav-item" data-view="settings">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span data-i18n="settings">Settings</span>
+      </div>
+      <div class="nav-item" data-view="about">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span data-i18n="about">About</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label" data-i18n="watchlist">Watchlist</div>
+      <div id="neighborhoodList"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD VIEW -->
+    <div class="view active" id="view-dashboard">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title" data-i18n="dashboardTitle">Live Operations Dashboard</h1>
+          <p class="view-subtitle" data-i18n="dashboardSub">Real-time flood monitoring across Houston metro area</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card ok">
+          <div class="stat-label" data-i18n="activeSensors">Active Sensors</div>
+          <div class="stat-value" id="dashSensors">47</div>
+          <div class="stat-trend">
+            <span class="pulse-dot" style="background:var(--accent-green)"></span>
+            All operational
+          </div>
+        </div>
+        <div class="stat-card" id="atRiskCard">
+          <div class="stat-label" data-i18n="atRisk">Streets at Risk</div>
+          <div class="stat-value" id="dashAtRisk">0</div>
+          <div class="stat-trend trend-down">↓ Within normal range</div>
+        </div>
+        <div class="stat-card warn">
+          <div class="stat-label" data-i18n="rainfall">Rainfall (24h)</div>
+          <div class="stat-value" id="dashRain">2.4"</div>
+          <div class="stat-trend trend-up">↑ +0.3" past hour</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="reach">Residents Notified</div>
+          <div class="stat-value" id="dashReach">142K</div>
+          <div class="stat-trend">↑ Active subscribers</div>
+        </div>
+      </div>
+
+      <div class="dash-row">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" data-i18n="waterLevels">Water Level — Brays Bayou (Live Feed)</div>
+            <div class="panel-title" id="liveBadge" style="color:var(--accent-green)">● LIVE</div>
+          </div>
+          <div class="chart">
+            <svg class="chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.5"/>
+                  <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line class="threshold-line" x1="0" y1="60" x2="600" y2="60"/>
+              <text x="595" y="55" text-anchor="end" fill="#ff3860" font-family="JetBrains Mono" font-size="9">FLOOD THRESHOLD</text>
+              <path id="chartArea" class="chart-area" d=""/>
+              <path id="chartLine" class="chart-line" d=""/>
+            </svg>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);">
+            <span>-60 MIN</span><span>-45</span><span>-30</span><span>-15</span><span>NOW</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" data-i18n="sensorStatus">Sensor Network</div>
+          </div>
+          <div id="sensorList" style="max-height:230px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title" data-i18n="recentActivity">Recent System Activity</div>
+        </div>
+        <div id="activityLog" style="font-family:var(--mono);font-size:11px;max-height:120px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- MAP VIEW -->
+    <div class="view" id="view-map">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title" data-i18n="mapTitle">Houston Sensor Network</h1>
+          <p class="view-subtitle" data-i18n="mapSub">47 water-level sensors monitoring bayous, ditches, and storm drains</p>
+        </div>
+      </div>
+
+      <div class="map-container">
+        <svg class="map-svg" id="mapSvg" viewBox="0 0 1000 600">
+          <!-- Base — gradient water/land -->
+          <defs>
+            <radialGradient id="mapBg" cx="50%" cy="40%">
+              <stop offset="0%" stop-color="#0c1a2e"/>
+              <stop offset="100%" stop-color="#050b14"/>
+            </radialGradient>
+            <linearGradient id="bayou" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#003a8c" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#0066cc" stop-opacity="0.6"/>
+            </linearGradient>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1d3654" stroke-width="0.5" opacity="0.3"/>
+            </pattern>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect width="1000" height="600" fill="url(#mapBg)"/>
+          <rect width="1000" height="600" fill="url(#grid)"/>
+
+          <!-- Houston metro outline (stylized) -->
+          <path d="M 100 300 Q 200 180, 350 200 Q 500 150, 650 200 Q 800 180, 900 300 Q 920 400, 850 480 Q 700 520, 500 500 Q 300 510, 180 470 Q 90 400, 100 300 Z"
+                fill="#0a1a2e" stroke="#2a4f7a" stroke-width="1" opacity="0.7"/>
+
+          <!-- Bayous (waterways) -->
+          <path d="M 80 350 Q 250 320, 400 360 Q 550 380, 700 350 Q 850 340, 920 380"
+                fill="none" stroke="url(#bayou)" stroke-width="6" opacity="0.7"/>
+          <path d="M 120 250 Q 300 280, 500 270 Q 700 260, 880 290"
+                fill="none" stroke="url(#bayou)" stroke-width="5" opacity="0.6"/>
+          <path d="M 200 420 Q 400 450, 600 430 Q 800 410, 900 440"
+                fill="none" stroke="url(#bayou)" stroke-width="4" opacity="0.5"/>
+          <path d="M 350 200 Q 380 350, 400 480"
+                fill="none" stroke="url(#bayou)" stroke-width="3" opacity="0.5"/>
+          <path d="M 600 200 Q 580 350, 560 470"
+                fill="none" stroke="url(#bayou)" stroke-width="3" opacity="0.5"/>
+
+          <!-- Bayou labels -->
+          <text x="220" y="335" fill="#4a6889" font-family="JetBrains Mono" font-size="9" font-style="italic">Buffalo Bayou</text>
+          <text x="350" y="265" fill="#4a6889" font-family="JetBrains Mono" font-size="9" font-style="italic">White Oak Bayou</text>
+          <text x="450" y="445" fill="#4a6889" font-family="JetBrains Mono" font-size="9" font-style="italic">Brays Bayou</text>
+
+          <!-- Neighborhood labels -->
+          <g id="neighborhoodLabels"></g>
+
+          <!-- Sensors -->
+          <g id="sensors"></g>
+        </svg>
+
+        <div class="map-overlay">
+          <div>NETWORK STATUS</div>
+          <div><strong id="mapSensorCount">47</strong> sensors active</div>
+          <div>Last sync: <strong id="mapLastSync">--</strong></div>
+        </div>
+
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Normal (&lt; 60%)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-amber)"></div>Watch (60–80%)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div>Alert (&gt; 80%)</div>
+        </div>
+
+        <div class="sensor-detail" id="sensorDetail">
+          <div class="sensor-detail-id" id="sdId"></div>
+          <div class="sensor-detail-name" id="sdName"></div>
+          <div class="sensor-detail-row"><span>Water level</span><span id="sdLevel"></span></div>
+          <div class="sensor-detail-row"><span>Threshold</span><span id="sdThreshold"></span></div>
+          <div class="sensor-detail-row"><span>Status</span><span id="sdStatus"></span></div>
+          <div class="sensor-detail-row"><span>Last reading</span><span id="sdReading"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOKUP VIEW -->
+    <div class="view" id="view-lookup">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title" data-i18n="lookupTitle">Check Your Address</h1>
+          <p class="view-subtitle" data-i18n="lookupSub">Get real-time flood risk for your specific street in Houston</p>
+        </div>
+      </div>
+
+      <div class="lookup-card">
+        <label style="display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-secondary);margin-bottom:8px;">
+          <span data-i18n="enterAddress">Enter your Houston address</span>
+        </label>
+        <input type="text" class="lookup-input" id="addressInput" placeholder="e.g., 4200 Lockwood Dr, Kashmere Gardens" />
+        <button class="lookup-button" onclick="checkAddress()" data-i18n="checkRisk">Check Flood Risk</button>
+
+        <div class="lookup-result" id="lookupResult">
+          <div class="lookup-result-status" id="resultStatus"></div>
+          <div id="resultDetail" style="color:var(--text-secondary);margin-bottom:12px;"></div>
+          <div id="resultActions"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title" data-i18n="quickAccess">Quick Access — Common Houston Neighborhoods</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="quickAccess"></div>
+      </div>
+    </div>
+
+    <!-- SIMULATION VIEW -->
+    <div class="view" id="view-simulation">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title" data-i18n="simTitle">Hurricane Harvey — Replay</h1>
+          <p class="view-subtitle" data-i18n="simSub">See how BayouWatch would have warned residents during the August 2017 disaster</p>
+        </div>
+      </div>
+
+      <div class="sim-controls">
+        <button class="sim-button" id="simPlayBtn" onclick="toggleSimulation()" data-i18n="runSim">▶ Run Simulation</button>
+        <button class="sim-button danger" onclick="resetSimulation()" data-i18n="reset">RESET</button>
+        <div class="sim-time" id="simTime">Aug 25, 2017 — 06:00 CST</div>
+      </div>
+
+      <div class="dash-row">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" data-i18n="rainfallSim">Rainfall + Bayou Level</div>
+            <div class="panel-title" id="simStatus" style="color:var(--text-dim)">PAUSED</div>
+          </div>
+          <div class="chart">
+            <svg class="chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="simGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ff3860" stop-opacity="0.5"/>
+                  <stop offset="100%" stop-color="#ff3860" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line class="threshold-line" x1="0" y1="40" x2="600" y2="40"/>
+              <text x="595" y="35" text-anchor="end" fill="#ff3860" font-family="JetBrains Mono" font-size="9">CRITICAL</text>
+              <path id="simChartArea" fill="url(#simGrad)" opacity="0.4" d=""/>
+              <path id="simChartLine" stroke="#ff3860" stroke-width="2" fill="none" filter="drop-shadow(0 0 4px #ff3860)" d=""/>
+            </svg>
+          </div>
+          <div class="sim-progress">
+            <div class="sim-progress-fill" id="simProgress" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);">
+            <span>AUG 25</span><span>AUG 27</span><span>AUG 29</span><span>AUG 31</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" data-i18n="alertsTriggered">Alerts BayouWatch Would Have Sent</div>
+          </div>
+          <div id="simAlertLog" style="max-height:230px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-header">
+          <div class="panel-title" data-i18n="impactStats">Projected Impact (vs Actual Harvey Outcomes)</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:12px 0;">
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;">With BayouWatch</div>
+            <div style="font-family:var(--display);font-size:28px;font-weight:800;color:var(--accent-green);" id="bwLives">--</div>
+            <div style="font-size:11px;color:var(--text-secondary);">lives potentially saved</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;">Avg Warning</div>
+            <div style="font-family:var(--display);font-size:28px;font-weight:800;color:var(--accent-cyan);" id="bwWarning">--</div>
+            <div style="font-size:11px;color:var(--text-secondary);">minutes ahead</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;">Streets Notified</div>
+            <div style="font-family:var(--display);font-size:28px;font-weight:800;color:var(--accent-amber);" id="bwStreets">--</div>
+            <div style="font-size:11px;color:var(--text-secondary);">in advance of flooding</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;">Languages</div>
+            <div style="font-family:var(--display);font-size:28px;font-weight:800;" id="bwLangs">5</div>
+            <div style="font-size:11px;color:var(--text-secondary);">simultaneous broadcast</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view" id="view-settings">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title" data-i18n="settingsTitle">Settings</h1>
+          <p class="view-subtitle" data-i18n="settingsSub">Configure your BayouWatch alerts and preferences</p>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:12px;">Notifications</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" data-i18n="smsAlerts">SMS Alerts</div>
+            <div class="setting-desc" data-i18n="smsAlertsDesc">Receive critical flood warnings via text message</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" data-i18n="pushAlerts">Push Notifications</div>
+            <div class="setting-desc" data-i18n="pushAlertsDesc">Real-time alerts through the BayouWatch app</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" data-i18n="emailAlerts">Email Updates</div>
+            <div class="setting-desc" data-i18n="emailAlertsDesc">Daily summary of conditions in your area</div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:12px;">Alert Thresholds</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" data-i18n="watchAlerts">Watch Alerts (60% capacity)</div>
+            <div class="setting-desc" data-i18n="watchAlertsDesc">Early heads-up before water levels become critical</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" data-i18n="criticalOnly">Critical Alerts Only</div>
+            <div class="setting-desc" data-i18n="criticalOnlyDesc">Only notify when flooding is imminent (80%+)</div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:12px;">Account</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Phone Number</div>
+            <div class="setting-desc">+1 (713) ███-██42</div>
+          </div>
+          <button style="background:var(--bg-elev);color:var(--text-primary);border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--body);">Edit</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Registered Address</div>
+            <div class="setting-desc" id="settingsAddr">Not set — please register</div>
+          </div>
+          <button style="background:var(--bg-elev);color:var(--text-primary);border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--body);">Update</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT VIEW -->
+    <div class="view" id="view-about">
+      <div class="about-hero">
+        <div class="about-title">When seconds matter,<br/><em>BayouWatch listens.</em></div>
+        <div class="about-text">
+          BayouWatch is a hyperlocal flood alert system for Houston. We use a network of solar-powered water-level sensors at bayous, ditches, and storm drains across the city — combined with real-time NOAA rainfall data and predictive modeling — to give residents 30 to 60 minutes of advance warning before flooding reaches their specific street.
+        </div>
+        <div class="about-features">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="20" height="20" fill="none" stroke="#00e5ff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div class="feature-title" data-i18n="featureSpeedTitle">Lightning Fast</div>
+            <div class="feature-desc" data-i18n="featureSpeedDesc">Under 60 seconds from sensor reading to SMS delivery — faster than any existing system in Houston.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="20" height="20" fill="none" stroke="#00e5ff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            </div>
+            <div class="feature-title" data-i18n="featureLocalTitle">Street-Level Precision</div>
+            <div class="feature-desc" data-i18n="featureLocalDesc">Unlike FEMA or HCFCD county-wide alerts, we tell you about YOUR specific street — not just your county.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="20" height="20" fill="none" stroke="#00e5ff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="feature-title" data-i18n="featureLangTitle">5+ Languages</div>
+            <div class="feature-desc" data-i18n="featureLangDesc">English, Spanish, Vietnamese, Chinese, and Arabic — covering 95%+ of Houston households equitably.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Built by Team BayouWatch</div>
+        </div>
+        <div style="padding:8px 0;line-height:1.7;color:var(--text-secondary);">
+          A finalist project from <strong style="color:var(--text-primary)">Carnegie Vanguard High School</strong>, Houston, TX.<br/>
+          <strong style="color:var(--text-primary)">Swami Nathan</strong> · Team Lead &amp; Project Manager<br/>
+          <strong style="color:var(--text-primary)">Vir Sanghavi</strong> · Platform Developer<br/>
+          <strong style="color:var(--text-primary)">Sashwath Kathiravan</strong> · Presentation Specialist<br/>
+          <strong style="color:var(--text-primary)">Alois Le Coz</strong> · Lead Researcher
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-header">
+          <div class="panel-title">Data Sources &amp; Partnerships</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);line-height:2;">
+          → Harris County Flood Control District (sensor infrastructure)<br/>
+          → NOAA National Hurricane Center (rainfall forecasts)<br/>
+          → Rice University SSPEED Center (flood modeling)<br/>
+          → FEMA Hazard Mitigation Grant Program (funding)<br/>
+          → City of Houston Office of Emergency Management
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL — Active Alerts -->
+  <aside class="right-panel">
+    <div class="right-header">
+      <div class="right-title" data-i18n="liveAlerts">Live Alert Feed</div>
+      <div class="system-status" style="padding:3px 8px;font-size:9px;">
+        <div class="pulse-dot"></div>
+        <span>LIVE</span>
+      </div>
+    </div>
+    <div class="alerts-list" id="alertsList"></div>
+  </aside>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// DATA — Houston neighborhoods + sensors
+// ═══════════════════════════════════════════════════════════════════
+
+const NEIGHBORHOODS = [
+  { id: 'kg', name: 'Kashmere Gardens', x: 540, y: 270, risk: 'high', pop: 12400 },
+  { id: 'ah', name: 'Acres Homes', x: 380, y: 220, risk: 'high', pop: 20600 },
+  { id: 'fw', name: 'Fifth Ward', x: 510, y: 330, risk: 'high', pop: 11500 },
+  { id: 'gp', name: 'Greenspoint', x: 470, y: 180, risk: 'high', pop: 35800 },
+  { id: 'my', name: 'Meyerland', x: 440, y: 430, risk: 'med', pop: 23300 },
+  { id: 'dt', name: 'Downtown', x: 470, y: 350, risk: 'med', pop: 18000 },
+  { id: 'eh', name: 'East End', x: 600, y: 380, risk: 'med', pop: 27000 },
+  { id: 'ws', name: 'West Houston', x: 250, y: 350, risk: 'low', pop: 45000 },
+  { id: 'cl', name: 'Clear Lake', x: 720, y: 470, risk: 'low', pop: 30000 },
+  { id: 'sg', name: 'Sugar Land', x: 200, y: 450, risk: 'low', pop: 118000 }
+];
+
+// Generate 47 sensors clustered around bayous
+const SENSORS = [];
+const sensorPositions = [
+  // Buffalo Bayou
+  [120, 345], [180, 335], [240, 330], [300, 335], [360, 345], [420, 360], [480, 365], [540, 360], [600, 350], [660, 345], [720, 350], [780, 350], [840, 360],
+  // White Oak Bayou
+  [150, 260], [220, 270], [290, 275], [360, 270], [430, 268], [500, 265], [570, 265], [640, 268], [710, 275], [780, 280], [850, 290],
+  // Brays Bayou
+  [220, 425], [290, 435], [360, 442], [430, 445], [500, 438], [570, 432], [640, 425], [720, 420], [800, 425],
+  // Storm drains scattered
+  [350, 200], [380, 220], [540, 270], [510, 330], [470, 180], [440, 430], [600, 380], [250, 350],
+  // Greens Bayou
+  [580, 210], [620, 230], [680, 250], [730, 270]
+];
+
+const SENSOR_NAMES = [
+  'Memorial Park', 'Allen Pkwy', 'Sabine St', 'Smith St', 'Main St', 'Polk St', 'Lockwood', 'Wayside', '610 East',
+  'Eastex Fwy', 'Wallisville', 'I-10 Bridge', 'Beltway 8 East',
+  'TC Jester', 'Pinemont', 'W 34th', 'Heights Blvd', 'Studemont', 'I-45 N', 'N Main', 'Hardy Toll', 'Aldine',
+  'I-45 NE', 'E Mt Houston',
+  'Cullen Blvd', 'MLK Blvd', 'Scott St', 'Stella Link', 'S Braeswood', 'Buffalo Spdway', 'Kirby Dr', 'Westpark', 'Eldridge',
+  'Barker Reservoir', 'Bear Creek', 'Antoine', 'W Little York', 'I-45 N at Aldine', 'S Post Oak', 'Brays Crossing', 'Hardy Yards',
+  'Greens Rd', 'Aldine-Westfield', 'Lee Rd', 'Bush Airport'
+];
+
+sensorPositions.forEach((pos, i) => {
+  SENSORS.push({
+    id: 'BW-' + String(i + 1).padStart(3, '0'),
+    name: SENSOR_NAMES[i] || ('Sensor ' + (i+1)),
+    x: pos[0],
+    y: pos[1],
+    level: 20 + Math.random() * 30, // start at 20-50% capacity
+    threshold: 80,
+    target: 0
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// I18N
+// ═══════════════════════════════════════════════════════════════════
+const I18N = {
+  en: {
+    dashboard: 'Dashboard', liveMap: 'Live Map', checkAddress: 'Check My Address',
+    simulation: 'Harvey Simulation', settings: 'Settings', about: 'About',
+    watchlist: 'Watchlist',
+    dashboardTitle: 'Live Operations Dashboard',
+    dashboardSub: 'Real-time flood monitoring across Houston metro area',
+    activeSensors: 'Active Sensors', atRisk: 'Streets at Risk',
+    rainfall: 'Rainfall (24h)', reach: 'Residents Notified',
+    waterLevels: 'Water Level — Brays Bayou (Live Feed)',
+    sensorStatus: 'Sensor Network', recentActivity: 'Recent System Activity',
+    mapTitle: 'Houston Sensor Network',
+    mapSub: '47 water-level sensors monitoring bayous, ditches, and storm drains',
+    lookupTitle: 'Check Your Address',
+    lookupSub: 'Get real-time flood risk for your specific street in Houston',
+    enterAddress: 'Enter your Houston address',
+    checkRisk: 'Check Flood Risk',
+    quickAccess: 'Quick Access — Common Houston Neighborhoods',
+    simTitle: 'Hurricane Harvey — Replay',
+    simSub: 'See how BayouWatch would have warned residents during the August 2017 disaster',
+    runSim: '▶ Run Simulation', reset: 'RESET',
+    rainfallSim: 'Rainfall + Bayou Level',
+    alertsTriggered: 'Alerts BayouWatch Would Have Sent',
+    impactStats: 'Projected Impact (vs Actual Harvey Outcomes)',
+    settingsTitle: 'Settings',
+    settingsSub: 'Configure your BayouWatch alerts and preferences',
+    smsAlerts: 'SMS Alerts',
+    smsAlertsDesc: 'Receive critical flood warnings via text message',
+    pushAlerts: 'Push Notifications',
+    pushAlertsDesc: 'Real-time alerts through the BayouWatch app',
+    emailAlerts: 'Email Updates',
+    emailAlertsDesc: 'Daily summary of conditions in your area',
+    watchAlerts: 'Watch Alerts (60% capacity)',
+    watchAlertsDesc: 'Early heads-up before water levels become critical',
+    criticalOnly: 'Critical Alerts Only',
+    criticalOnlyDesc: 'Only notify when flooding is imminent (80%+)',
+    liveAlerts: 'Live Alert Feed',
+    featureSpeedTitle: 'Lightning Fast',
+    featureSpeedDesc: 'Under 60 seconds from sensor reading to SMS delivery — faster than any existing system in Houston.',
+    featureLocalTitle: 'Street-Level Precision',
+    featureLocalDesc: 'Unlike FEMA or HCFCD county-wide alerts, we tell you about YOUR specific street — not just your county.',
+    featureLangTitle: '5+ Languages',
+    featureLangDesc: 'English, Spanish, Vietnamese, Chinese, and Arabic — covering 95%+ of Houston households equitably.'
+  },
+  es: {
+    dashboard: 'Panel', liveMap: 'Mapa en Vivo', checkAddress: 'Revisar Mi Dirección',
+    simulation: 'Simulación Harvey', settings: 'Configuración', about: 'Acerca De',
+    watchlist: 'Lista de Vigilancia',
+    dashboardTitle: 'Panel de Operaciones en Vivo',
+    dashboardSub: 'Monitoreo de inundaciones en tiempo real en el área metropolitana de Houston',
+    activeSensors: 'Sensores Activos', atRisk: 'Calles en Riesgo',
+    rainfall: 'Lluvia (24h)', reach: 'Residentes Notificados',
+    waterLevels: 'Nivel de Agua — Brays Bayou',
+    sensorStatus: 'Red de Sensores', recentActivity: 'Actividad Reciente',
+    mapTitle: 'Red de Sensores de Houston',
+    mapSub: '47 sensores monitoreando arroyos, zanjas y desagües',
+    lookupTitle: 'Revisar Su Dirección',
+    lookupSub: 'Obtenga el riesgo de inundación en tiempo real para su calle',
+    enterAddress: 'Ingrese su dirección de Houston',
+    checkRisk: 'Revisar Riesgo',
+    quickAccess: 'Acceso Rápido — Vecindarios de Houston',
+    simTitle: 'Huracán Harvey — Repetición',
+    simSub: 'Vea cómo BayouWatch habría advertido durante el desastre de agosto 2017',
+    runSim: '▶ Iniciar', reset: 'REINICIAR',
+    rainfallSim: 'Lluvia + Nivel de Arroyo',
+    alertsTriggered: 'Alertas que BayouWatch Habría Enviado',
+    impactStats: 'Impacto Proyectado (vs Resultados Reales)',
+    settingsTitle: 'Configuración',
+    settingsSub: 'Configure sus alertas y preferencias',
+    smsAlerts: 'Alertas SMS', smsAlertsDesc: 'Reciba advertencias por texto',
+    pushAlerts: 'Notificaciones Push', pushAlertsDesc: 'Alertas en tiempo real',
+    emailAlerts: 'Correo Electrónico', emailAlertsDesc: 'Resumen diario',
+    watchAlerts: 'Alertas de Vigilancia (60%)', watchAlertsDesc: 'Aviso temprano',
+    criticalOnly: 'Solo Críticas', criticalOnlyDesc: 'Solo cuando es inminente (80%+)',
+    liveAlerts: 'Alertas en Vivo',
+    featureSpeedTitle: 'Ultra Rápido',
+    featureSpeedDesc: 'Menos de 60 segundos del sensor al SMS.',
+    featureLocalTitle: 'Precisión a Nivel de Calle',
+    featureLocalDesc: 'Le decimos sobre SU calle específica.',
+    featureLangTitle: '5+ Idiomas',
+    featureLangDesc: 'Inglés, Español, Vietnamita, Chino y Árabe.'
+  },
+  vi: {
+    dashboard: 'Bảng Điều Khiển', liveMap: 'Bản Đồ Trực Tiếp', checkAddress: 'Kiểm Tra Địa Chỉ',
+    simulation: 'Mô Phỏng Harvey', settings: 'Cài Đặt', about: 'Giới Thiệu',
+    watchlist: 'Danh Sách Theo Dõi',
+    dashboardTitle: 'Bảng Điều Khiển Hoạt Động',
+    dashboardSub: 'Giám sát lũ lụt thời gian thực tại Houston',
+    activeSensors: 'Cảm Biến Hoạt Động', atRisk: 'Đường Phố Có Nguy Cơ',
+    rainfall: 'Lượng Mưa (24h)', reach: 'Người Dân Được Thông Báo',
+    waterLevels: 'Mực Nước — Brays Bayou',
+    sensorStatus: 'Mạng Cảm Biến', recentActivity: 'Hoạt Động Gần Đây',
+    mapTitle: 'Mạng Cảm Biến Houston',
+    mapSub: '47 cảm biến giám sát các kênh, mương và cống thoát nước',
+    lookupTitle: 'Kiểm Tra Địa Chỉ',
+    lookupSub: 'Nhận thông tin nguy cơ lũ lụt thời gian thực',
+    enterAddress: 'Nhập địa chỉ Houston',
+    checkRisk: 'Kiểm Tra Nguy Cơ',
+    quickAccess: 'Truy Cập Nhanh — Khu Phố Houston',
+    simTitle: 'Bão Harvey — Phát Lại',
+    simSub: 'Xem cách BayouWatch đã có thể cảnh báo cư dân',
+    runSim: '▶ Chạy', reset: 'ĐẶT LẠI',
+    rainfallSim: 'Lượng Mưa + Mức Nước',
+    alertsTriggered: 'Cảnh Báo BayouWatch Sẽ Gửi',
+    impactStats: 'Tác Động Dự Kiến',
+    settingsTitle: 'Cài Đặt',
+    settingsSub: 'Cấu hình cảnh báo và tùy chọn',
+    smsAlerts: 'Cảnh Báo SMS', smsAlertsDesc: 'Nhận cảnh báo qua tin nhắn',
+    pushAlerts: 'Thông Báo Đẩy', pushAlertsDesc: 'Cảnh báo thời gian thực',
+    emailAlerts: 'Cập Nhật Email', emailAlertsDesc: 'Tóm tắt hàng ngày',
+    watchAlerts: 'Cảnh Báo Theo Dõi (60%)', watchAlertsDesc: 'Cảnh báo sớm',
+    criticalOnly: 'Chỉ Cảnh Báo Quan Trọng', criticalOnlyDesc: 'Chỉ khi lũ lụt sắp xảy ra',
+    liveAlerts: 'Cảnh Báo Trực Tiếp',
+    featureSpeedTitle: 'Cực Nhanh',
+    featureSpeedDesc: 'Dưới 60 giây từ cảm biến đến SMS.',
+    featureLocalTitle: 'Độ Chính Xác Cấp Đường Phố',
+    featureLocalDesc: 'Cảnh báo về CON ĐƯỜNG cụ thể của bạn.',
+    featureLangTitle: '5+ Ngôn Ngữ',
+    featureLangDesc: 'Anh, Tây Ban Nha, Việt, Trung và Ả Rập.'
+  },
+  zh: {
+    dashboard: '仪表盘', liveMap: '实时地图', checkAddress: '查询地址',
+    simulation: '哈维飓风模拟', settings: '设置', about: '关于',
+    watchlist: '监视列表',
+    dashboardTitle: '实时操作仪表盘',
+    dashboardSub: '休斯敦都市区实时洪水监测',
+    activeSensors: '活跃传感器', atRisk: '危险街道',
+    rainfall: '降雨量 (24小时)', reach: '已通知居民',
+    waterLevels: '水位 — Brays Bayou',
+    sensorStatus: '传感器网络', recentActivity: '最近活动',
+    mapTitle: '休斯敦传感器网络',
+    mapSub: '47个传感器监测河道、沟渠和雨水管',
+    lookupTitle: '查询您的地址',
+    lookupSub: '获取您所在街道的实时洪水风险',
+    enterAddress: '输入您的休斯敦地址',
+    checkRisk: '检查洪水风险',
+    quickAccess: '快速访问 — 休斯敦社区',
+    simTitle: '哈维飓风 — 回放',
+    simSub: '查看 BayouWatch 如何警告居民',
+    runSim: '▶ 运行', reset: '重置',
+    rainfallSim: '降雨 + 河道水位',
+    alertsTriggered: 'BayouWatch 将发送的警报',
+    impactStats: '预期影响',
+    settingsTitle: '设置',
+    settingsSub: '配置警报和偏好',
+    smsAlerts: '短信警报', smsAlertsDesc: '通过短信接收警告',
+    pushAlerts: '推送通知', pushAlertsDesc: '实时警报',
+    emailAlerts: '电子邮件更新', emailAlertsDesc: '每日摘要',
+    watchAlerts: '观察警报 (60%)', watchAlertsDesc: '提前预警',
+    criticalOnly: '仅紧急警报', criticalOnlyDesc: '仅在迫在眉睫时',
+    liveAlerts: '实时警报',
+    featureSpeedTitle: '极速',
+    featureSpeedDesc: '从传感器到短信不到60秒。',
+    featureLocalTitle: '街道级精度',
+    featureLocalDesc: '告知您具体街道的情况。',
+    featureLangTitle: '5+种语言',
+    featureLangDesc: '英语、西语、越南语、中文和阿拉伯语。'
+  },
+  ar: {
+    dashboard: 'لوحة القيادة', liveMap: 'الخريطة المباشرة', checkAddress: 'تحقق من عنواني',
+    simulation: 'محاكاة هارفي', settings: 'الإعدادات', about: 'حول',
+    watchlist: 'قائمة المراقبة',
+    dashboardTitle: 'لوحة العمليات المباشرة',
+    dashboardSub: 'مراقبة الفيضانات في الوقت الحقيقي',
+    activeSensors: 'المستشعرات النشطة', atRisk: 'الشوارع المعرضة للخطر',
+    rainfall: 'الأمطار (24س)', reach: 'السكان المُبَلَّغون',
+    waterLevels: 'مستوى المياه — Brays Bayou',
+    sensorStatus: 'شبكة المستشعرات', recentActivity: 'النشاط الأخير',
+    mapTitle: 'شبكة مستشعرات هيوستن',
+    mapSub: '47 مستشعراً يرصد القنوات والمصارف',
+    lookupTitle: 'تحقق من عنوانك',
+    lookupSub: 'احصل على مخاطر الفيضان لشارعك',
+    enterAddress: 'أدخل عنوانك في هيوستن',
+    checkRisk: 'تحقق من المخاطر',
+    quickAccess: 'وصول سريع — أحياء هيوستن',
+    simTitle: 'إعصار هارفي — إعادة',
+    simSub: 'شاهد كيف كانت BayouWatch ستحذر السكان',
+    runSim: '▶ تشغيل', reset: 'إعادة',
+    rainfallSim: 'الأمطار + مستوى القناة',
+    alertsTriggered: 'التنبيهات التي كانت سترسلها BayouWatch',
+    impactStats: 'الأثر المتوقع',
+    settingsTitle: 'الإعدادات',
+    settingsSub: 'تكوين التنبيهات والتفضيلات',
+    smsAlerts: 'تنبيهات SMS', smsAlertsDesc: 'تلقي تحذيرات عبر الرسائل',
+    pushAlerts: 'الإشعارات الفورية', pushAlertsDesc: 'تنبيهات فورية',
+    emailAlerts: 'تحديثات البريد الإلكتروني', emailAlertsDesc: 'ملخص يومي',
+    watchAlerts: 'تنبيهات المراقبة (60٪)', watchAlertsDesc: 'تنبيه مبكر',
+    criticalOnly: 'التنبيهات الحرجة فقط', criticalOnlyDesc: 'فقط عند الخطر',
+    liveAlerts: 'تنبيهات مباشرة',
+    featureSpeedTitle: 'فائق السرعة',
+    featureSpeedDesc: 'أقل من 60 ثانية من المستشعر إلى SMS.',
+    featureLocalTitle: 'دقة على مستوى الشارع',
+    featureLocalDesc: 'نخبرك عن شارعك المحدد.',
+    featureLangTitle: '5+ لغات',
+    featureLangDesc: 'الإنجليزية والإسبانية والفيتنامية والصينية والعربية.'
+  }
+};
+
+let currentLang = 'en';
+function setLang(lang) {
+  currentLang = lang;
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key]) el.textContent = dict[key];
+  });
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CLOCK & SYSTEM STATUS
+// ═══════════════════════════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const time = now.toUTCString().slice(17, 25);
+  document.getElementById('clock').textContent = time;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const view = item.dataset.view;
+    if (!view) return;
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// SIDEBAR — Neighborhoods
+// ═══════════════════════════════════════════════════════════════════
+function renderNeighborhoods() {
+  const container = document.getElementById('neighborhoodList');
+  container.innerHTML = '';
+  NEIGHBORHOODS.forEach(n => {
+    // Compute average sensor level near this neighborhood
+    const nearbySensors = SENSORS.filter(s => {
+      const dx = s.x - n.x, dy = s.y - n.y;
+      return Math.sqrt(dx*dx + dy*dy) < 100;
+    });
+    const avgLevel = nearbySensors.length
+      ? nearbySensors.reduce((a, s) => a + s.level, 0) / nearbySensors.length
+      : 30;
+
+    let status, statusClass, fillColor;
+    if (avgLevel > 80) { status = 'ALERT'; statusClass = 'status-alert'; fillColor = 'var(--accent-red)'; }
+    else if (avgLevel > 60) { status = 'WATCH'; statusClass = 'status-watch'; fillColor = 'var(--accent-amber)'; }
+    else { status = 'SAFE'; statusClass = 'status-safe'; fillColor = 'var(--accent-green)'; }
+
+    const card = document.createElement('div');
+    card.className = 'neighborhood-card' + (avgLevel > 80 ? ' alert' : '');
+    card.innerHTML = `
+      <div class="nh-name">
+        ${n.name}
+        <span class="nh-status ${statusClass}">${status}</span>
+      </div>
+      <div class="nh-meter"><div class="nh-meter-fill" style="width:${avgLevel}%;background:${fillColor}"></div></div>
+      <div class="nh-readout"><span>${nearbySensors.length} sensors</span><span>${avgLevel.toFixed(0)}%</span></div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAP RENDERING
+// ═══════════════════════════════════════════════════════════════════
+function renderMap() {
+  // Neighborhood labels
+  const labelsG = document.getElementById('neighborhoodLabels');
+  labelsG.innerHTML = '';
+  NEIGHBORHOODS.forEach(n => {
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', n.x);
+    t.setAttribute('y', n.y - 12);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('fill', '#8ba9c8');
+    t.setAttribute('font-family', 'Inter Tight, sans-serif');
+    t.setAttribute('font-size', '10');
+    t.setAttribute('font-weight', '600');
+    t.textContent = n.name.toUpperCase();
+    labelsG.appendChild(t);
+  });
+
+  // Sensors
+  const sensorsG = document.getElementById('sensors');
+  sensorsG.innerHTML = '';
+  SENSORS.forEach(s => {
+    let color = '#00d97e';
+    if (s.level > 80) color = '#ff3860';
+    else if (s.level > 60) color = '#ffb547';
+
+    // Outer pulse for alert sensors
+    if (s.level > 80) {
+      const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      pulse.setAttribute('cx', s.x);
+      pulse.setAttribute('cy', s.y);
+      pulse.setAttribute('r', 4);
+      pulse.setAttribute('fill', color);
+      pulse.setAttribute('opacity', '0.3');
+      pulse.innerHTML = '<animate attributeName="r" from="4" to="14" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.6" to="0" dur="1.5s" repeatCount="indefinite"/>';
+      sensorsG.appendChild(pulse);
+    }
+
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', s.x);
+    dot.setAttribute('cy', s.y);
+    dot.setAttribute('r', 4);
+    dot.setAttribute('fill', color);
+    dot.setAttribute('stroke', '#050b14');
+    dot.setAttribute('stroke-width', '1.5');
+    dot.setAttribute('class', 'sensor-dot');
+    dot.setAttribute('filter', 'url(#glow)');
+    dot.dataset.sensorId = s.id;
+
+    dot.addEventListener('mouseenter', e => showSensorDetail(s, e));
+    dot.addEventListener('mouseleave', hideSensorDetail);
+    sensorsG.appendChild(dot);
+  });
+
+  document.getElementById('mapSensorCount').textContent = SENSORS.length;
+  document.getElementById('mapLastSync').textContent = new Date().toUTCString().slice(17, 25);
+}
+
+function showSensorDetail(sensor, e) {
+  const detail = document.getElementById('sensorDetail');
+  document.getElementById('sdId').textContent = sensor.id;
+  document.getElementById('sdName').textContent = sensor.name;
+  document.getElementById('sdLevel').textContent = sensor.level.toFixed(1) + '%';
+  document.getElementById('sdThreshold').textContent = sensor.threshold + '%';
+  let status = 'NORMAL';
+  let statusColor = 'var(--accent-green)';
+  if (sensor.level > 80) { status = 'CRITICAL'; statusColor = 'var(--accent-red)'; }
+  else if (sensor.level > 60) { status = 'WATCH'; statusColor = 'var(--accent-amber)'; }
+  document.getElementById('sdStatus').innerHTML = `<span style="color:${statusColor}">${status}</span>`;
+  document.getElementById('sdReading').textContent = (Math.floor(Math.random() * 60) + 1) + 's ago';
+
+  const rect = document.getElementById('mapSvg').getBoundingClientRect();
+  const containerRect = document.querySelector('.map-container').getBoundingClientRect();
+  const sx = (sensor.x / 1000) * rect.width;
+  const sy = (sensor.y / 600) * rect.height;
+  detail.style.left = (sx + 12) + 'px';
+  detail.style.top = (sy - 60) + 'px';
+  detail.classList.add('show');
+}
+function hideSensorDetail() {
+  document.getElementById('sensorDetail').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE CHART (Brays Bayou simulation)
+// ═══════════════════════════════════════════════════════════════════
+let chartHistory = [];
+for (let i = 0; i < 60; i++) chartHistory.push(35 + Math.random() * 12);
+
+function updateChart() {
+  // Add new reading, remove oldest
+  const last = chartHistory[chartHistory.length - 1];
+  let next = last + (Math.random() - 0.5) * 6;
+  next = Math.max(20, Math.min(85, next));
+  chartHistory.push(next);
+  if (chartHistory.length > 60) chartHistory.shift();
+
+  // Build SVG path
+  const w = 600, h = 200;
+  const points = chartHistory.map((v, i) => {
+    const x = (i / (chartHistory.length - 1)) * w;
+    const y = h - (v / 100) * h;
+    return [x, y];
+  });
+
+  const linePath = 'M ' + points.map(p => p[0] + ',' + p[1]).join(' L ');
+  const areaPath = linePath + ` L ${w},${h} L 0,${h} Z`;
+
+  document.getElementById('chartLine').setAttribute('d', linePath);
+  document.getElementById('chartArea').setAttribute('d', areaPath);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SENSOR LIST (dashboard)
+// ═══════════════════════════════════════════════════════════════════
+function renderSensorList() {
+  const container = document.getElementById('sensorList');
+  container.innerHTML = '';
+  // Show top 8 sensors by level (most concerning first)
+  const sorted = [...SENSORS].sort((a, b) => b.level - a.level).slice(0, 10);
+  sorted.forEach(s => {
+    let color = 'var(--accent-green)';
+    if (s.level > 80) color = 'var(--accent-red)';
+    else if (s.level > 60) color = 'var(--accent-amber)';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;';
+    row.innerHTML = `
+      <div style="width:6px;height:6px;border-radius:50%;background:${color};box-shadow:0 0 4px ${color};"></div>
+      <div style="flex:1;color:var(--text-secondary);">${s.id}</div>
+      <div style="color:var(--text-primary);font-weight:500;">${s.name}</div>
+      <div style="color:${color};font-weight:700;width:50px;text-align:right;">${s.level.toFixed(0)}%</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ACTIVITY LOG
+// ═══════════════════════════════════════════════════════════════════
+let activityLog = [];
+function logActivity(message, type='info') {
+  const time = new Date().toUTCString().slice(17, 25);
+  activityLog.unshift({ time, message, type });
+  if (activityLog.length > 20) activityLog.pop();
+
+  const container = document.getElementById('activityLog');
+  container.innerHTML = activityLog.map(a => {
+    const color = a.type === 'critical' ? 'var(--accent-red)' :
+                  a.type === 'warning' ? 'var(--accent-amber)' :
+                  'var(--text-secondary)';
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-dim)">[${a.time}]</span> <span style="color:${color}">${a.message}</span></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE ALERTS FEED
+// ═══════════════════════════════════════════════════════════════════
+let alerts = [];
+function addAlert(severity, location, message) {
+  const time = new Date().toUTCString().slice(17, 25);
+  alerts.unshift({ severity, location, message, time });
+  if (alerts.length > 30) alerts.pop();
+  renderAlerts();
+
+  // Crisis banner for critical
+  if (severity === 'critical') {
+    const banner = document.getElementById('crisisBanner');
+    document.getElementById('crisisText').textContent = message;
+    document.getElementById('crisisTime').textContent = (Math.floor(Math.random() * 30) + 30) + ' MIN';
+    banner.classList.add('show');
+    setTimeout(() => banner.classList.remove('show'), 8000);
+  }
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alertsList');
+  if (alerts.length === 0) {
+    container.innerHTML = `<div class="empty-state">No active alerts.<br/>System monitoring normally.</div>`;
+    return;
+  }
+  container.innerHTML = alerts.map(a => `
+    <div class="alert-item ${a.severity}">
+      <div class="alert-meta">
+        <span class="alert-severity ${a.severity}">● ${a.severity}</span>
+        <span>${a.time}</span>
+      </div>
+      <div class="alert-message">${a.message}</div>
+      <div class="alert-location">${a.location}</div>
+    </div>
+  `).join('');
+}
+
+// Seed some initial alerts
+addAlert('info', 'System', 'BayouWatch monitoring active across 47 sensors');
+addAlert('info', 'NOAA Sync', 'Rainfall forecast updated — 1.2" expected in 6h');
+
+// ═══════════════════════════════════════════════════════════════════
+// REAL-TIME UPDATE LOOP
+// ═══════════════════════════════════════════════════════════════════
+let tickCount = 0;
+function tick() {
+  tickCount++;
+
+  // Drift sensor levels slightly
+  SENSORS.forEach(s => {
+    s.level += (Math.random() - 0.5) * 1.5;
+    s.level = Math.max(15, Math.min(95, s.level));
+  });
+
+  // Random events (occasional)
+  if (Math.random() < 0.05 && !simulationRunning) {
+    const events = [
+      () => logActivity('NOAA forecast sync complete', 'info'),
+      () => logActivity('Sensor BW-' + String(Math.ceil(Math.random()*47)).padStart(3,'0') + ' battery: 87%', 'info'),
+      () => logActivity('Calibration check passed for 12 sensors', 'info'),
+      () => logActivity('Twilio SMS gateway verified', 'info')
+    ];
+    events[Math.floor(Math.random() * events.length)]();
+  }
+
+  // Update UI
+  updateChart();
+  if (tickCount % 4 === 0) {
+    renderSensorList();
+    renderNeighborhoods();
+    if (document.getElementById('view-map').classList.contains('active')) {
+      renderMap();
+    }
+  }
+
+  // Update dashboard counters
+  const atRisk = SENSORS.filter(s => s.level > 80).length;
+  document.getElementById('dashAtRisk').textContent = atRisk;
+  document.getElementById('atRiskCard').className = 'stat-card' +
+    (atRisk > 5 ? ' alert' : atRisk > 2 ? ' warn' : ' ok');
+  document.getElementById('sensorCount').textContent = '47/47';
+  document.getElementById('dashSensors').textContent = '47';
+}
+setInterval(tick, 1500);
+
+// ═══════════════════════════════════════════════════════════════════
+// ADDRESS LOOKUP
+// ═══════════════════════════════════════════════════════════════════
+function checkAddress() {
+  const addr = document.getElementById('addressInput').value.trim();
+  if (!addr) return;
+
+  const result = document.getElementById('lookupResult');
+  result.classList.add('show');
+
+  // Determine risk based on neighborhood mentioned
+  const lower = addr.toLowerCase();
+  let neighborhood = NEIGHBORHOODS.find(n => lower.includes(n.name.toLowerCase()));
+  if (!neighborhood) {
+    // Pick by random for demo
+    neighborhood = NEIGHBORHOODS[Math.floor(Math.random() * NEIGHBORHOODS.length)];
+  }
+
+  // Compute risk based on actual nearby sensors
+  const nearbySensors = SENSORS.filter(s => {
+    const dx = s.x - neighborhood.x, dy = s.y - neighborhood.y;
+    return Math.sqrt(dx*dx + dy*dy) < 100;
+  });
+  const avgLevel = nearbySensors.length
+    ? nearbySensors.reduce((a, s) => a + s.level, 0) / nearbySensors.length
+    : 30;
+
+  const status = document.getElementById('resultStatus');
+  const detail = document.getElementById('resultDetail');
+  const actions = document.getElementById('resultActions');
+
+  if (avgLevel > 80) {
+    status.className = 'lookup-result-status alert';
+    status.textContent = '⚠ FLOOD ALERT';
+    detail.innerHTML = `<strong>${neighborhood.name}</strong> is currently at <strong style="color:var(--accent-red)">${avgLevel.toFixed(0)}% capacity</strong>. Flooding likely within 30–60 minutes. <strong>Take action now.</strong>`;
+    actions.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <button class="lookup-button" style="background:var(--accent-red);color:white;">View Evacuation Routes</button>
+        <button class="lookup-button" style="background:var(--bg-elev);color:var(--text-primary);border:1px solid var(--border);">Subscribe to SMS</button>
+      </div>
+    `;
+  } else if (avgLevel > 60) {
+    status.className = 'lookup-result-status watch';
+    status.textContent = '◐ WATCH';
+    detail.innerHTML = `<strong>${neighborhood.name}</strong> is at <strong style="color:var(--accent-amber)">${avgLevel.toFixed(0)}% capacity</strong>. Monitor conditions and prepare to evacuate. ${nearbySensors.length} nearby sensors reporting.`;
+    actions.innerHTML = `<button class="lookup-button" style="background:var(--accent-amber);color:var(--bg-deep);">Subscribe to Alerts</button>`;
+  } else {
+    status.className = 'lookup-result-status safe';
+    status.textContent = '✓ SAFE';
+    detail.innerHTML = `<strong>${neighborhood.name}</strong> is at <strong style="color:var(--accent-green)">${avgLevel.toFixed(0)}% capacity</strong>. All ${nearbySensors.length} nearby sensors reporting normal water levels. You're in the clear.`;
+    actions.innerHTML = `<button class="lookup-button" style="background:var(--bg-elev);color:var(--text-primary);border:1px solid var(--border);">Subscribe to Future Alerts</button>`;
+  }
+
+  // Update settings address
+  document.getElementById('settingsAddr').textContent = addr;
+}
+
+// Quick access neighborhoods
+function renderQuickAccess() {
+  const container = document.getElementById('quickAccess');
+  container.innerHTML = '';
+  NEIGHBORHOODS.forEach(n => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'background:var(--bg-elev);border:1px solid var(--border);color:var(--text-primary);padding:10px;border-radius:6px;cursor:pointer;font-family:var(--body);font-size:12px;text-align:left;transition:all 0.15s;';
+    btn.onmouseover = () => { btn.style.borderColor = 'var(--accent-cyan)'; btn.style.transform = 'translateY(-1px)'; };
+    btn.onmouseout = () => { btn.style.borderColor = 'var(--border)'; btn.style.transform = 'translateY(0)'; };
+    btn.innerHTML = `<div style="font-weight:600;">${n.name}</div><div style="font-size:10px;color:var(--text-dim);font-family:var(--mono);">Pop: ${n.pop.toLocaleString()}</div>`;
+    btn.onclick = () => {
+      document.getElementById('addressInput').value = '1234 Main St, ' + n.name + ', Houston, TX';
+      checkAddress();
+    };
+    container.appendChild(btn);
+  });
+}
+
+// Allow Enter key
+document.getElementById('addressInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') checkAddress();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// HARVEY SIMULATION
+// ═══════════════════════════════════════════════════════════════════
+let simulationRunning = false;
+let simulationStep = 0;
+let simulationInterval = null;
+let simChartData = [];
+
+// Real Harvey rainfall data approximated (Aug 25-31 2017)
+const HARVEY_DATA = [
+  // [hour, rainfall_intensity, water_level]
+  [0, 5, 25], [6, 15, 30], [12, 25, 38], [18, 35, 48],
+  [24, 50, 60], [30, 70, 75], [36, 85, 88],
+  [42, 95, 95], [48, 90, 98], [54, 80, 96], [60, 65, 92],
+  [66, 50, 85], [72, 40, 78], [78, 35, 72], [84, 30, 68],
+  [90, 25, 62], [96, 20, 56], [102, 15, 50], [108, 10, 45],
+  [114, 8, 40], [120, 5, 35], [126, 3, 30], [132, 2, 28], [144, 1, 25]
+];
+
+const HARVEY_TIMELINE = [
+  'Aug 25, 06:00', 'Aug 25, 12:00', 'Aug 25, 18:00', 'Aug 26, 00:00',
+  'Aug 26, 06:00', 'Aug 26, 12:00', 'Aug 26, 18:00', 'Aug 27, 00:00',
+  'Aug 27, 06:00', 'Aug 27, 12:00', 'Aug 27, 18:00', 'Aug 28, 00:00',
+  'Aug 28, 06:00', 'Aug 28, 12:00', 'Aug 28, 18:00', 'Aug 29, 00:00',
+  'Aug 29, 06:00', 'Aug 29, 12:00', 'Aug 29, 18:00', 'Aug 30, 00:00',
+  'Aug 30, 12:00', 'Aug 31, 00:00', 'Aug 31, 12:00', 'Sept 1'
+];
+
+function toggleSimulation() {
+  if (simulationRunning) {
+    pauseSimulation();
+  } else {
+    runSimulation();
+  }
+}
+
+function runSimulation() {
+  simulationRunning = true;
+  document.getElementById('simPlayBtn').textContent = '❚❚ Pause';
+  document.getElementById('simStatus').textContent = '● RUNNING';
+  document.getElementById('simStatus').style.color = 'var(--accent-green)';
+
+  simulationInterval = setInterval(() => {
+    if (simulationStep >= HARVEY_DATA.length) {
+      pauseSimulation();
+      return;
+    }
+    advanceSimulation();
+    simulationStep++;
+  }, 800);
+}
+
+function pauseSimulation() {
+  simulationRunning = false;
+  clearInterval(simulationInterval);
+  document.getElementById('simPlayBtn').textContent = '▶ Resume';
+  document.getElementById('simStatus').textContent = 'PAUSED';
+  document.getElementById('simStatus').style.color = 'var(--text-dim)';
+}
+
+function resetSimulation() {
+  pauseSimulation();
+  simulationStep = 0;
+  simChartData = [];
+  document.getElementById('simAlertLog').innerHTML = '';
+  document.getElementById('simChartLine').setAttribute('d', '');
+  document.getElementById('simChartArea').setAttribute('d', '');
+  document.getElementById('simProgress').style.width = '0%';
+  document.getElementById('simTime').textContent = 'Aug 25, 2017 — 06:00 CST';
+  document.getElementById('simPlayBtn').textContent = '▶ Run Simulation';
+  document.getElementById('bwLives').textContent = '--';
+  document.getElementById('bwWarning').textContent = '--';
+  document.getElementById('bwStreets').textContent = '--';
+}
+
+function advanceSimulation() {
+  const data = HARVEY_DATA[simulationStep];
+  const time = HARVEY_TIMELINE[simulationStep];
+  document.getElementById('simTime').textContent = time + ' CST';
+
+  simChartData.push(data[2]);
+
+  // Build chart path
+  const w = 600, h = 200;
+  const points = simChartData.map((v, i) => {
+    const x = (i / Math.max(1, HARVEY_DATA.length - 1)) * w;
+    const y = h - (v / 100) * h;
+    return [x, y];
+  });
+  if (points.length > 1) {
+    const linePath = 'M ' + points.map(p => p[0] + ',' + p[1]).join(' L ');
+    const areaPath = linePath + ` L ${points[points.length-1][0]},${h} L ${points[0][0]},${h} Z`;
+    document.getElementById('simChartLine').setAttribute('d', linePath);
+    document.getElementById('simChartArea').setAttribute('d', areaPath);
+  }
+
+  // Progress bar
+  const pct = ((simulationStep + 1) / HARVEY_DATA.length) * 100;
+  document.getElementById('simProgress').style.width = pct + '%';
+
+  // Trigger simulated alerts at appropriate water levels
+  const level = data[2];
+  if (level >= 60 && level < 80 && !simAlertTriggered60) {
+    addSimAlert('warning', 'WATCH ALERT', `${time}: Water levels approaching critical at Brays, Buffalo, and White Oak Bayous. Residents advised to monitor.`);
+    simAlertTriggered60 = true;
+  }
+  if (level >= 80 && level < 95 && !simAlertTriggered80) {
+    addSimAlert('critical', 'FLOOD ALERT', `${time}: CRITICAL — flooding imminent in Kashmere Gardens, Acres Homes, Fifth Ward. SMS sent to 142,000 residents in 5 languages.`);
+    simAlertTriggered80 = true;
+    // Stats reveal
+    document.getElementById('bwLives').textContent = '~52';
+    document.getElementById('bwWarning').textContent = '47';
+    document.getElementById('bwStreets').textContent = '1,847';
+  }
+  if (level >= 95 && !simAlertTriggered95) {
+    addSimAlert('critical', 'CATASTROPHIC FLOODING', `${time}: All-clear for non-essential travel. Residents in pilot zones evacuated 47 minutes ahead of street flooding.`);
+    simAlertTriggered95 = true;
+  }
+}
+
+let simAlertTriggered60 = false;
+let simAlertTriggered80 = false;
+let simAlertTriggered95 = false;
+
+function addSimAlert(severity, label, message) {
+  const container = document.getElementById('simAlertLog');
+  const div = document.createElement('div');
+  div.className = 'alert-item ' + severity;
+  div.innerHTML = `
+    <div class="alert-meta">
+      <span class="alert-severity ${severity}">● ${label}</span>
+    </div>
+    <div class="alert-message" style="font-size:11px;">${message}</div>
+  `;
+  container.insertBefore(div, container.firstChild);
+}
+
+// Reset triggers on full reset
+const origReset = resetSimulation;
+resetSimulation = function() {
+  origReset();
+  simAlertTriggered60 = false;
+  simAlertTriggered80 = false;
+  simAlertTriggered95 = false;
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+renderNeighborhoods();
+renderMap();
+renderSensorList();
+renderQuickAccess();
+renderAlerts();
+updateChart();
+logActivity('System initialized — 47 sensors online', 'info');
+logActivity('Connected to NOAA forecast API', 'info');
+
+// Periodic random alert (for demo realism)
+setTimeout(() => {
+  if (!simulationRunning) {
+    addAlert('info', 'Brays Bayou', 'Routine sensor calibration completed successfully');
+  }
+}, 5000);
+
+setTimeout(() => {
+  if (!simulationRunning) {
+    addAlert('warning', 'White Oak Bayou', 'Sensor BW-019 reporting elevated readings — monitoring closely');
+  }
+}, 12000);
+
+</script>
+</body>
+</html>

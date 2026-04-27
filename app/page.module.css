@@ -1,0 +1,17 @@
+﻿.app {
+  display: grid;
+  grid-template-columns: 240px 1fr 360px;
+  grid-template-rows: 60px 1fr;
+  grid-template-areas:
+    "header header header"
+    "sidebar main right";
+  height: 100vh;
+}
+.main {
+  grid-area: main;
+  overflow: hidden;
+  position: relative;
+}
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 200px 1fr 320px; }
+}

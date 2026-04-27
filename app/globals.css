@@ -1,0 +1,75 @@
+﻿:root {
+  /* Backgrounds — strict navy stack */
+  --bg-deep:    #060a14;
+  --bg-panel:   #0a0e1a;
+  --bg-sidebar: #0d1117;
+  --bg-elev:    #111827;
+  --bg-card:    #162032;
+
+  /* Borders */
+  --border:        #1a2332;
+  --border-bright: #243446;
+
+  /* Text */
+  --text-primary:   #f0f6ff;
+  --text-secondary: #7b9ab5;
+  --text-dim:       #3d5470;
+
+  /* Accent — steel blue + status only */
+  --accent-cyan:     #4a9ebb;
+  --accent-cyan-dim: #3a7d9e;
+  --accent-amber: #f59e0b;
+  --accent-red:   #ef4444;
+  --accent-green: #10b981;
+
+  /* Shadows */
+  --shadow-glow: none;
+  --shadow-card: 0 4px 16px rgba(0,0,0,0.35);
+
+  /* Fonts — Inter everywhere, Mono for data only */
+  --mono:    var(--font-mono), ui-monospace, monospace;
+  --display: var(--font-body), -apple-system, sans-serif;
+  --body:    var(--font-body), -apple-system, sans-serif;
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(74,158,187,0.03) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(74,158,187,0.02) 0%, transparent 55%);
+}
+
+::-webkit-scrollbar       { width:8px; height:8px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:var(--border-bright); }
+
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.4; }
+}
+@keyframes alertPulse {
+  0%,100% { box-shadow:0 0 0 0   rgba(239,68,68,0.3); }
+  50%      { box-shadow:0 0 0 3px rgba(239,68,68,0); }
+}
+@keyframes slideIn {
+  from { transform:translateX(20px); opacity:0; }
+  to   { transform:translateX(0);    opacity:1; }
+}
+@keyframes slideDown {
+  from { transform:translateY(-100%); }
+  to   { transform:translateY(0); }
+}
+@keyframes shake {
+  0%,100% { transform:rotate(0); }
+  25%     { transform:rotate(-10deg); }
+  75%     { transform:rotate(10deg); }
+}
