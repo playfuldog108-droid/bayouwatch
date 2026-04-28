@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useApp } from '@/app/context/AppContext'
 import { useClock } from '@/app/hooks/useClock'

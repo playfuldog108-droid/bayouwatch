@@ -1,4 +1,4 @@
-﻿.rightPanel {
+.rightPanel {
   grid-area: right;
   background: var(--bg-panel);
   border-left: 1px solid var(--border);

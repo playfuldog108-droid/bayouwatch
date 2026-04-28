@@ -1,4 +1,4 @@
-﻿.banner {
+.banner {
   position: fixed;
   top: 60px; left: 0; right: 0;
   background: var(--accent-red);

@@ -1,4 +1,4 @@
-﻿.header {
+.header {
   grid-area: header;
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);

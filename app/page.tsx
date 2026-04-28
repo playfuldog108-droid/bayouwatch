@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { AppProvider } from '@/app/context/AppContext'
 import { useApp } from '@/app/context/AppContext'

@@ -1,4 +1,4 @@
-﻿import type { Neighborhood, Sensor, HarveyPoint } from './types'
+import type { Neighborhood, Sensor, HarveyPoint } from './types'
 
 export const NEIGHBORHOODS: Neighborhood[] = [
   { id: 'kg', name: 'Kashmere Gardens', x: 540, y: 270, risk: 'high', pop: 12400 },

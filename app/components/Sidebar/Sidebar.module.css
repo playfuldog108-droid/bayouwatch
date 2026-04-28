@@ -1,4 +1,4 @@
-﻿.sidebar {
+.sidebar {
   grid-area: sidebar;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border);

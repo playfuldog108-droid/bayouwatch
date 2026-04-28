@@ -1,4 +1,4 @@
-﻿export type ViewId = 'dashboard' | 'map' | 'lookup' | 'simulation' | 'settings' | 'about'
+export type ViewId = 'dashboard' | 'map' | 'lookup' | 'simulation' | 'settings' | 'about'
 export type Language = 'en' | 'es' | 'vi' | 'zh' | 'ar'
 export type AlertSeverity = 'critical' | 'warning' | 'info'
 export type ActivityType = 'critical' | 'warning' | 'info'

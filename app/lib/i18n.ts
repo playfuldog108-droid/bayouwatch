@@ -1,4 +1,4 @@
-﻿import type { Language } from './types'
+import type { Language } from './types'
 
 type Dict = Record<string, string>
 
