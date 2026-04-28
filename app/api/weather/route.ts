@@ -1,7 +1,7 @@
 export const revalidate = 300
 
 export async function GET() {
-  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_KEY
+  const apiKey = process.env.OPENWEATHER_KEY
   if (!apiKey) {
     return Response.json({ error: 'Weather API not configured' }, { status: 500 })
   }
