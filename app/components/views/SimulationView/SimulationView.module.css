@@ -67,3 +67,14 @@
 .impactValue.cyan   { color:var(--accent-cyan); }
 .impactValue.amber  { color:var(--accent-amber); }
 .impactDesc { font-size:11px; color:var(--text-secondary); }
+@media (max-width: 767px) {
+  .view { padding: 14px; }
+  .viewTitle { font-size: 20px; }
+  .dashRow { grid-template-columns: 1fr; }
+  .impactGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .impactValue { font-size: 22px; }
+  .simControls { flex-wrap: wrap; gap: 10px; }
+  .alertMeta { font-size: 10px; }
+  .alertMessage { font-size: 12px; }
+  .chartLabels { font-size: 11px; }
+}

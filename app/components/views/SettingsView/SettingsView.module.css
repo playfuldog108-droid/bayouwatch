@@ -42,3 +42,8 @@
   flex-shrink: 0;
 }
 .editBtn:hover { border-color:var(--accent-cyan); }
+@media (max-width: 767px) {
+  .view { padding: 14px; }
+  .viewTitle { font-size: 20px; }
+  .settingDesc { font-size: 13px; }
+}

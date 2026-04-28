@@ -30,9 +30,13 @@ export function SimulationView({ active }: { active: boolean }) {
   const [stats, setStats] = useState<SimStats | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const stepRef = useRef(0)
+  const t50Ref = useRef(false)
   const t60Ref = useRef(false)
+  const t70Ref = useRef(false)
   const t80Ref = useRef(false)
+  const t90Ref = useRef(false)
   const t95Ref = useRef(false)
+  const tRecedingRef = useRef(false)
 
   function addSimAlert(severity: 'critical' | 'warning', label: string, message: string) {
     const id = `${Date.now()}-${Math.random()}`
@@ -52,21 +56,41 @@ export function SimulationView({ active }: { active: boolean }) {
     setStep(currentStep + 1)
     stepRef.current = currentStep + 1
 
-    if (level >= 60 && level < 80 && !t60Ref.current) {
+    if (level >= 50 && level < 60 && !t50Ref.current) {
+      addSimAlert('warning', 'ELEVATED MONITORING',
+        `${time}: Rainfall intensifying — Brays Bayou at 50% capacity. Upstream gauges trending upward. Residents in low-lying areas should prepare.`)
+      t50Ref.current = true
+    }
+    if (level >= 60 && level < 70 && !t60Ref.current) {
       addSimAlert('warning', 'WATCH ALERT',
-        `${time}: Water levels approaching critical at Brays, Buffalo, and White Oak Bayous. Residents advised to monitor.`)
+        `${time}: Water levels approaching watch threshold at Brays, Buffalo, and White Oak Bayous. Residents advised to monitor local notifications.`)
       t60Ref.current = true
     }
-    if (level >= 80 && level < 95 && !t80Ref.current) {
+    if (level >= 70 && level < 80 && !t70Ref.current) {
+      addSimAlert('warning', 'ESCALATED WATCH',
+        `${time}: Bayou levels rising rapidly. BayouWatch SMS dispatched to 67,000 residents across 8 zip codes. Move vehicles to higher ground.`)
+      t70Ref.current = true
+    }
+    if (level >= 80 && level < 90 && !t80Ref.current) {
       addSimAlert('critical', 'FLOOD ALERT',
         `${time}: CRITICAL — flooding imminent in Kashmere Gardens, Acres Homes, Fifth Ward. SMS sent to 142,000 residents in 5 languages.`)
       t80Ref.current = true
       setStats({ lives: '~52', warning: '47', streets: '1,847' })
     }
+    if (level >= 90 && level < 95 && !t90Ref.current) {
+      addSimAlert('critical', 'SEVERE FLOODING',
+        `${time}: Brays Bayou overtopping banks at Meyerland — street flooding confirmed on W Bellfort, Braeswood, and Renwick Dr. Do NOT drive through water.`)
+      t90Ref.current = true
+    }
     if (level >= 95 && !t95Ref.current) {
       addSimAlert('critical', 'CATASTROPHIC FLOODING',
-        `${time}: All-clear for non-essential travel. Residents in pilot zones evacuated 47 minutes ahead of street flooding.`)
+        `${time}: All bayous at or above 95% capacity. Residents in pilot zones evacuated 47 minutes ahead of street flooding. BayouWatch alert system prevented an estimated 52 fatalities.`)
       t95Ref.current = true
+    }
+    if (level < 94 && t95Ref.current && !tRecedingRef.current) {
+      addSimAlert('warning', 'LEVELS DECLINING',
+        `${time}: Peak flooding has passed. Water levels declining slowly — streets remain flooded. Avoid non-essential travel. Report damage to 3-1-1.`)
+      tRecedingRef.current = true
     }
   }
 
@@ -100,9 +124,13 @@ export function SimulationView({ active }: { active: boolean }) {
   function reset() {
     stopSim()
     stepRef.current = 0
+    t50Ref.current = false
     t60Ref.current = false
+    t70Ref.current = false
     t80Ref.current = false
+    t90Ref.current = false
     t95Ref.current = false
+    tRecedingRef.current = false
     setStep(0)
     setChartData([])
     setSimAlerts([])
@@ -113,7 +141,7 @@ export function SimulationView({ active }: { active: boolean }) {
 
   const timeLabel = step > 0 && step <= HARVEY_TIMELINE.length
     ? `${HARVEY_TIMELINE[step - 1]} CST`
-    : 'Aug 25, 2017 — 06:00 CST'
+    : 'Aug 25, 2017 — 06:24 CST'
 
   const progress = (step / HARVEY_DATA.length) * 100
   const { line, area } = buildSimPath(chartData, 600, 200)

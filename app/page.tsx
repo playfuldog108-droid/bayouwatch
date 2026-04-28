@@ -12,6 +12,7 @@ import { LookupView } from '@/app/components/views/LookupView/LookupView'
 import { SimulationView } from '@/app/components/views/SimulationView/SimulationView'
 import { SettingsView } from '@/app/components/views/SettingsView/SettingsView'
 import { AboutView } from '@/app/components/views/AboutView/AboutView'
+import { BottomNav } from '@/app/components/BottomNav/BottomNav'
 import styles from './page.module.css'
 
 function AppShell() {
@@ -30,6 +31,7 @@ function AppShell() {
         <AboutView      active={currentView === 'about'}      />
       </main>
       <RightPanel />
+      <BottomNav />
     </div>
   )
 }

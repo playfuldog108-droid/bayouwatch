@@ -19,6 +19,7 @@ import type {
   AlertSeverity,
   ActivityType,
   CrisisBannerState,
+  WeatherData,
 } from '@/app/lib/types'
 
 interface AppContextValue {
@@ -31,6 +32,7 @@ interface AppContextValue {
   crisisBanner: CrisisBannerState
   registeredAddress: string
   isSimulationRunning: boolean
+  weather: WeatherData | null
   setCurrentView: (view: ViewId) => void
   setCurrentLang: (lang: Language) => void
   addAlert: (severity: AlertSeverity, location: string, message: string) => void
@@ -56,8 +58,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   })
   const [registeredAddress, setRegisteredAddress] = useState('')
   const [isSimulationRunning, setIsSimulationRunningState] = useState(false)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
 
   const isSimRunningRef = useRef(false)
+  const alertedRainRef = useRef(false)
 
   const setIsSimulationRunning = useCallback((running: boolean) => {
     isSimRunningRef.current = running
@@ -65,7 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logActivity = useCallback((message: string, type: ActivityType = 'info') => {
-    const time = new Date().toUTCString().slice(17, 25)
+    const time = new Date().toLocaleTimeString()
     setActivityLog(prev => {
       const entry: ActivityEntry = {
         id: `${Date.now()}-${Math.random()}`,
@@ -79,7 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addAlert = useCallback(
     (severity: AlertSeverity, location: string, message: string) => {
-      const time = new Date().toUTCString().slice(17, 25)
+      const time = new Date().toLocaleTimeString()
       const entry: AlertEntry = {
         id: `${Date.now()}-${Math.random()}`,
         severity,
@@ -172,6 +176,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval)
   }, [logActivity])
 
+  // Weather polling — every 5 minutes
+  useEffect(() => {
+    async function fetchWeather() {
+      try {
+        const res = await fetch('/api/weather')
+        if (!res.ok) return
+        const data: WeatherData = await res.json()
+        setWeather(data)
+
+        if (data.rain1h > 10 && !alertedRainRef.current && !isSimRunningRef.current) {
+          alertedRainRef.current = true
+          setSensors(prev =>
+            prev.map(s => ({
+              ...s,
+              level: Math.min(95, s.level + 20 + Math.random() * 15),
+            }))
+          )
+          addAlert(
+            'warning',
+            'Weather System',
+            `Heavy rainfall detected — ${data.rain1h.toFixed(1)}mm in the last hour. Bayou sensors elevated across the network.`
+          )
+          logActivity(
+            `Heavy rain alert: ${data.rain1h.toFixed(1)}mm/hr — sensor levels elevated`,
+            'warning'
+          )
+        }
+
+        if (data.rain1h <= 10) {
+          alertedRainRef.current = false
+        }
+      } catch {
+        // silently fail — app remains usable without live weather
+      }
+    }
+
+    fetchWeather()
+    const id = setInterval(fetchWeather, 5 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [addAlert, logActivity])
+
   const value: AppContextValue = {
     sensors,
     alerts,
@@ -182,6 +227,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     crisisBanner,
     registeredAddress,
     isSimulationRunning,
+    weather,
     setCurrentView,
     setCurrentLang,
     addAlert,

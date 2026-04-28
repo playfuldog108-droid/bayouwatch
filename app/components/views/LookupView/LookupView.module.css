@@ -96,3 +96,9 @@
 .quickBtn:hover { border-color:var(--border-bright); background:var(--bg-card); }
 .quickBtnName { font-weight:600; }
 .quickBtnPop  { font-size:10px; color:var(--text-dim); font-family:var(--mono); }
+@media (max-width: 767px) {
+  .view { padding: 14px; }
+  .viewTitle { font-size: 20px; }
+  .quickGrid { grid-template-columns: repeat(2, 1fr); }
+  .quickBtnPop { font-size: 11px; }
+}

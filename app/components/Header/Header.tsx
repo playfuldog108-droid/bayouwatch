@@ -6,8 +6,8 @@ import { type Language } from '@/app/lib/types'
 import styles from './Header.module.css'
 
 export function Header() {
-  const { currentLang, setCurrentLang } = useApp()
-  const utcTime = useClock()
+  const { currentLang, setCurrentLang, weather } = useApp()
+  const localTime = useClock()
 
   return (
     <header className={styles.header}>
@@ -22,10 +22,34 @@ export function Header() {
         <span>SYSTEM ONLINE</span>
       </div>
       <div className={styles.spacer} />
+
+      {weather ? (
+        <div className={styles.weatherChip}>
+          <span className={styles.weatherCity}>HOUSTON</span>
+          <span className={styles.weatherTemp}>{weather.temp}°F</span>
+          <span className={styles.weatherSep}>|</span>
+          <span>
+            {weather.rain1h > 0 ? (
+              <span className={weather.rain1h > 10 ? styles.weatherRainHeavy : styles.weatherRainLight}>
+                {weather.rain1h.toFixed(1)}mm/hr
+              </span>
+            ) : (
+              'no rain'
+            )}
+          </span>
+          <span className={styles.weatherSep}>|</span>
+          <span>{weather.clouds}% cld</span>
+          <span className={styles.weatherSep}>|</span>
+          <span>{weather.description}</span>
+        </div>
+      ) : (
+        <div className={styles.weatherLoading}>WEATHER ···</div>
+      )}
+
       <div className={styles.meta}>
         <div>SENSORS: <b>47/47</b></div>
         <div>UPTIME: <b>99.97%</b></div>
-        <div>UTC: <b>{utcTime}</b></div>
+        <div>LOCAL: <b>{localTime}</b></div>
       </div>
       <select
         className={styles.langSelect}

@@ -76,3 +76,49 @@
   font-size: 12px;
   cursor: pointer;
 }
+.weatherChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  background: rgba(0,229,255,0.04);
+  border: 1px solid rgba(0,229,255,0.12);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.weatherCity {
+  color: var(--accent-cyan);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+}
+.weatherTemp {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.weatherSep {
+  opacity: 0.25;
+}
+.weatherRainHeavy {
+  color: var(--accent-red);
+  font-weight: 600;
+}
+.weatherRainLight {
+  color: var(--accent-amber);
+}
+.weatherLoading {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+@media (max-width: 767px) {
+  .meta { display: none; }
+  .langSelect { display: none; }
+  .weatherChip { display: none; }
+  .header { padding: 0 16px; gap: 12px; }
+  .logo { font-size: 16px; }
+}

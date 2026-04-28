@@ -47,3 +47,15 @@ export interface HarveyPoint {
   rainfall: number
   waterLevel: number
 }
+
+export interface WeatherData {
+  temp: number        // °F
+  feelsLike: number   // °F
+  humidity: number    // %
+  description: string
+  icon: string
+  clouds: number      // %
+  rain1h: number      // mm
+  wind: number        // mph
+  fetchedAt: number   // ms epoch
+}

@@ -17,11 +17,18 @@ function buildChartPath(history: number[], w: number, h: number) {
 }
 
 export function DashboardView({ active }: { active: boolean }) {
-  const { sensors, activityLog, chartHistory, currentLang } = useApp()
+  const { sensors, activityLog, chartHistory, currentLang, weather } = useApp()
 
   const atRisk = sensors.filter(s => s.level > 80).length
   const atRiskClass = atRisk > 5 ? styles.cardAlert : atRisk > 2 ? styles.cardWarn : styles.cardOk
   const sorted = [...sensors].sort((a, b) => b.level - a.level).slice(0, 10)
+
+  const rain1h = weather?.rain1h ?? null
+  const rainfallClass = rain1h !== null && rain1h > 10
+    ? styles.cardAlert
+    : rain1h !== null && rain1h > 2
+    ? styles.cardWarn
+    : styles.cardOk
 
   const { line, area } = buildChartPath(chartHistory, 600, 200)
 
@@ -48,10 +55,18 @@ export function DashboardView({ active }: { active: boolean }) {
           <div className={styles.statValue}>{atRisk}</div>
           <div className={`${styles.statTrend} ${styles.trendDown}`}>↓ Within normal range</div>
         </div>
-        <div className={`${styles.statCard} ${styles.cardWarn}`}>
+        <div className={`${styles.statCard} ${rainfallClass}`}>
           <div className={styles.statLabel}>{t(currentLang, 'rainfall')}</div>
-          <div className={styles.statValue}>2.4"</div>
-          <div className={`${styles.statTrend} ${styles.trendUp}`}>↑ +0.3" past hour</div>
+          <div className={styles.statValue}>
+            {rain1h !== null ? `${rain1h.toFixed(1)}mm` : '···'}
+          </div>
+          <div className={`${styles.statTrend} ${rain1h !== null && rain1h > 0 ? styles.trendUp : ''}`}>
+            {rain1h === null
+              ? 'Loading live data...'
+              : rain1h > 0
+              ? `↑ ${rain1h.toFixed(1)}mm past hour · OWM live`
+              : 'No rain · OWM live'}
+          </div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>{t(currentLang, 'reach')}</div>
