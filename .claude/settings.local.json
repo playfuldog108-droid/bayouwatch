@@ -4,7 +4,17 @@
       "Bash(node -e ' *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "WebFetch(domain:www.harriscountyfws.org)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.waterdata.usgs.gov)",
+      "WebFetch(domain:waterservices.usgs.gov)",
+      "WebFetch(domain:water.noaa.gov)",
+      "WebFetch(domain:water.weather.gov)",
+      "WebFetch(domain:api.water.noaa.gov)",
+      "Bash(npx tsc *)"
     ]
   }
 }

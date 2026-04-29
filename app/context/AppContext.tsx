@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import { makeInitialSensors, INITIAL_CHART_HISTORY } from '@/app/lib/data'
+import { GAUGE_CONFIG } from '@/app/lib/gaugeConfig'
 import type {
   Sensor,
   AlertEntry,
@@ -20,6 +21,7 @@ import type {
   ActivityType,
   CrisisBannerState,
   WeatherData,
+  GaugeData,
 } from '@/app/lib/types'
 
 interface AppContextValue {
@@ -33,6 +35,7 @@ interface AppContextValue {
   registeredAddress: string
   isSimulationRunning: boolean
   weather: WeatherData | null
+  gaugeData: GaugeData | null
   setCurrentView: (view: ViewId) => void
   setCurrentLang: (lang: Language) => void
   addAlert: (severity: AlertSeverity, location: string, message: string) => void
@@ -59,9 +62,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [registeredAddress, setRegisteredAddress] = useState('')
   const [isSimulationRunning, setIsSimulationRunningState] = useState(false)
   const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [gaugeData, setGaugeData] = useState<GaugeData | null>(null)
 
   const isSimRunningRef = useRef(false)
   const alertedRainRef = useRef(false)
+  const hasRealChartDataRef = useRef(false)
 
   const setIsSimulationRunning = useCallback((running: boolean) => {
     isSimRunningRef.current = running
@@ -149,15 +154,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       tickCount++
 
       setSensors(prev =>
-        prev.map(s => ({
-          ...s,
-          level: Math.max(15, Math.min(95, s.level + (Math.random() - 0.5) * 1.5)),
-        }))
+        prev.map(s =>
+          s.hasRealData
+            ? s
+            : { ...s, level: Math.max(15, Math.min(95, s.level + (Math.random() - 0.5) * 1.5)) }
+        )
       )
 
       setChartHistory(prev => {
         const last = prev[prev.length - 1] ?? 35
-        const next = Math.max(20, Math.min(85, last + (Math.random() - 0.5) * 6))
+        const next = hasRealChartDataRef.current
+          ? Math.max(0, Math.min(100, last + (Math.random() - 0.5) * 0.3))
+          : Math.max(20, Math.min(85, last + (Math.random() - 0.5) * 6))
         return [...prev.slice(-59), next]
       })
 
@@ -174,6 +182,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, 1500)
 
     return () => clearInterval(interval)
+  }, [logActivity])
+
+  // Harris County FWS / USGS gauge polling — every 5 minutes
+  useEffect(() => {
+    async function fetchGauges() {
+      try {
+        const res = await fetch('/api/gauges')
+        if (!res.ok) return
+        const data: GaugeData = await res.json()
+
+        setSensors(prev => {
+          const updated = [...prev]
+          for (const reading of data.readings) {
+            const config = GAUGE_CONFIG[reading.siteCode]
+            if (config && reading.level !== null && reading.stageFt !== null) {
+              const sensor = updated[config.sensorIndex]
+              if (sensor) {
+                updated[config.sensorIndex] = {
+                  ...sensor,
+                  level: reading.level,
+                  stageFt: reading.stageFt,
+                  siteCode: reading.siteCode,
+                  hasRealData: true,
+                }
+              }
+            }
+          }
+          return updated
+        })
+
+        if (data.braysBayouHistory.length > 0) {
+          setChartHistory(data.braysBayouHistory)
+          hasRealChartDataRef.current = true
+        }
+
+        setGaugeData(data)
+
+        const liveCount = data.readings.filter(r => r.level !== null).length
+        logActivity(
+          `USGS FWS sync: ${liveCount} gauges updated (HCFWS live)`,
+          'info'
+        )
+      } catch {
+        // silently degrade — simulated data remains active
+      }
+    }
+
+    fetchGauges()
+    const id = setInterval(fetchGauges, 5 * 60 * 1000)
+    return () => clearInterval(id)
   }, [logActivity])
 
   // Weather polling — every 5 minutes
@@ -228,6 +286,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     registeredAddress,
     isSimulationRunning,
     weather,
+    gaugeData,
     setCurrentView,
     setCurrentLang,
     addAlert,

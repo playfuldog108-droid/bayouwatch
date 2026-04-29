@@ -17,11 +17,14 @@ function buildChartPath(history: number[], w: number, h: number) {
 }
 
 export function DashboardView({ active }: { active: boolean }) {
-  const { sensors, activityLog, chartHistory, currentLang, weather } = useApp()
+  const { sensors, activityLog, chartHistory, currentLang, weather, gaugeData } = useApp()
 
   const atRisk = sensors.filter(s => s.level > 80).length
   const atRiskClass = atRisk > 5 ? styles.cardAlert : atRisk > 2 ? styles.cardWarn : styles.cardOk
   const sorted = [...sensors].sort((a, b) => b.level - a.level).slice(0, 10)
+
+  const braysReading = gaugeData?.readings.find(r => r.siteCode === '08075000') ?? null
+  const liveGaugeCount = gaugeData?.readings.filter(r => r.level !== null).length ?? 0
 
   const rain1h = weather?.rain1h ?? null
   const rainfallClass = rain1h !== null && rain1h > 10
@@ -78,8 +81,17 @@ export function DashboardView({ active }: { active: boolean }) {
       <div className={styles.dashRow}>
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
-            <div className={styles.panelTitle}>{t(currentLang, 'waterLevels')}</div>
-            <div className={styles.liveBadge}>● LIVE</div>
+            <div>
+              <div className={styles.panelTitle}>{t(currentLang, 'waterLevels')}</div>
+              {braysReading?.stageFt != null && (
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  Brays Bayou @ Main St — {braysReading.stageFt.toFixed(2)} ft stage
+                </div>
+              )}
+            </div>
+            <div className={styles.liveBadge}>
+              {gaugeData ? `● FWS LIVE (${liveGaugeCount})` : '● LIVE'}
+            </div>
           </div>
           <div className={styles.chart}>
             <svg className={styles.chartSvg} viewBox="0 0 600 200" preserveAspectRatio="none">
@@ -96,7 +108,10 @@ export function DashboardView({ active }: { active: boolean }) {
             </svg>
           </div>
           <div className={styles.chartLabels}>
-            <span>-60 MIN</span><span>-45</span><span>-30</span><span>-15</span><span>NOW</span>
+            {gaugeData
+              ? <><span>-15h</span><span>-11h</span><span>-7h</span><span>-3h</span><span>NOW</span></>
+              : <><span>-60 MIN</span><span>-45</span><span>-30</span><span>-15</span><span>NOW</span></>
+            }
           </div>
         </div>
 
@@ -115,8 +130,20 @@ export function DashboardView({ active }: { active: boolean }) {
                 <div key={s.id} className={styles.sensorRow}>
                   <div className={styles.sensorDot} style={{ background: color, boxShadow: `0 0 4px ${color}` }} />
                   <div className={styles.sensorId}>{s.id}</div>
-                  <div className={styles.sensorName}>{s.name}</div>
-                  <div className={styles.sensorLevel} style={{ color }}>{s.level.toFixed(0)}%</div>
+                  <div className={styles.sensorName}>
+                    {s.name}
+                    {s.hasRealData && (
+                      <span style={{ fontSize: '9px', color: 'var(--accent-cyan)', marginLeft: '4px' }}>USGS</span>
+                    )}
+                  </div>
+                  <div className={styles.sensorLevel} style={{ color }}>
+                    {s.level.toFixed(0)}%
+                    {s.stageFt != null && (
+                      <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '4px' }}>
+                        {s.stageFt.toFixed(1)}ft
+                      </span>
+                    )}
+                  </div>
                 </div>
               )
             })}

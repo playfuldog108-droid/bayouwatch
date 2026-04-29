@@ -10,6 +10,23 @@ export interface Sensor {
   y: number
   level: number
   threshold: number
+  stageFt?: number   // real USGS stage reading in feet
+  siteCode?: string  // USGS site code when backed by real data
+  hasRealData?: boolean
+}
+
+export interface GaugeReading {
+  siteCode: string
+  siteName: string
+  stageFt: number | null
+  level: number | null
+  timestamp: string | null
+}
+
+export interface GaugeData {
+  readings: GaugeReading[]
+  braysBayouHistory: number[]
+  fetchedAt: number
 }
 
 export interface Neighborhood {
