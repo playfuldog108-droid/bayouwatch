@@ -21,7 +21,13 @@ export function DashboardView({ active }: { active: boolean }) {
 
   const atRisk = sensors.filter(s => s.level > 80).length
   const atRiskClass = atRisk > 5 ? styles.cardAlert : atRisk > 2 ? styles.cardWarn : styles.cardOk
-  const sorted = [...sensors].sort((a, b) => b.level - a.level).slice(0, 10)
+  const sorted = [...sensors]
+    .sort((a, b) => {
+      if (a.hasRealData && !b.hasRealData) return -1
+      if (!a.hasRealData && b.hasRealData) return 1
+      return b.level - a.level
+    })
+    .slice(0, 10)
 
   const braysReading = gaugeData?.readings.find(r => r.siteCode === '08075000') ?? null
   const liveGaugeCount = gaugeData?.readings.filter(r => r.level !== null).length ?? 0
@@ -118,6 +124,9 @@ export function DashboardView({ active }: { active: boolean }) {
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
             <div className={styles.panelTitle}>{t(currentLang, 'sensorStatus')}</div>
+            {liveGaugeCount > 0 && (
+              <div className={styles.liveBadge}>● USGS ({liveGaugeCount})</div>
+            )}
           </div>
           <div className={styles.sensorList}>
             {sorted.map(s => {

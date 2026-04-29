@@ -201,6 +201,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               if (sensor) {
                 updated[config.sensorIndex] = {
                   ...sensor,
+                  name: config.name,
                   level: reading.level,
                   stageFt: reading.stageFt,
                   siteCode: reading.siteCode,
