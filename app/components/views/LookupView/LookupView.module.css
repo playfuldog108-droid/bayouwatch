@@ -96,6 +96,37 @@
 .quickBtn:hover { border-color:var(--border-bright); background:var(--bg-card); }
 .quickBtnName { font-weight:600; }
 .quickBtnPop  { font-size:10px; color:var(--text-dim); font-family:var(--mono); }
+.button:disabled { opacity: 0.55; cursor: not-allowed; }
+.errorBox {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid var(--accent-red);
+  border-radius: 6px;
+  color: var(--accent-red);
+  font-size: 13px;
+}
+.subscribeSuccess {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid var(--accent-green);
+  border-radius: 6px;
+  color: var(--accent-green);
+  font-size: 13px;
+}
+.phoneInput { margin-top: 10px; margin-bottom: 0; }
+.liveBadge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--accent-cyan);
+  color: var(--bg-deep);
+  border-radius: 3px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
 @media (max-width: 767px) {
   .view { padding: 14px; }
   .viewTitle { font-size: 20px; }

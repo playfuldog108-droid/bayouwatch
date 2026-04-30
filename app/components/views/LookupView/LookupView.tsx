@@ -6,38 +6,158 @@ import { t } from '@/app/lib/i18n'
 import { NEIGHBORHOODS } from '@/app/lib/data'
 import styles from './LookupView.module.css'
 
+const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+
+// Real lat/lng for each active USGS/Harris County FWS gauge
+const GAUGE_LOCATIONS: Record<string, { lat: number; lng: number; sensorIndex: number; name: string; bayou: string }> = {
+  '08073600': { lat: 29.7483, lng: -95.5372, sensorIndex: 0,  name: 'Buffalo Bayou at West Belt Dr', bayou: 'Buffalo Bayou' },
+  '08073700': { lat: 29.7603, lng: -95.4847, sensorIndex: 1,  name: 'Buffalo Bayou at Piney Point',  bayou: 'Buffalo Bayou' },
+  '08074250': { lat: 29.7725, lng: -95.3894, sensorIndex: 13, name: 'Brickhouse Gully',               bayou: 'White Oak Bayou' },
+  '08074500': { lat: 29.7794, lng: -95.4000, sensorIndex: 17, name: 'White Oak Bayou at Houston',     bayou: 'White Oak Bayou' },
+  '08075000': { lat: 29.7189, lng: -95.3886, sensorIndex: 28, name: 'Brays Bayou at Houston',         bayou: 'Brays Bayou' },
+  '08075500': { lat: 29.6905, lng: -95.3536, sensorIndex: 26, name: 'Sims Bayou at Houston',          bayou: 'Sims Bayou' },
+  '08076000': { lat: 29.7689, lng: -95.2831, sensorIndex: 41, name: 'Greens Bayou at Houston',        bayou: 'Greens Bayou' },
+  '08076700': { lat: 29.8008, lng: -95.2100, sensorIndex: 43, name: 'Greens Bayou at Ley Rd',         bayou: 'Greens Bayou' },
+}
+
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.8
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 interface LookupResult {
   status: 'safe' | 'watch' | 'alert'
   neighborhood: string
-  avgLevel: number
-  sensorCount: number
+  formattedAddress: string
+  sensorName: string
+  bayou: string
+  sensorLevel: number
+  stageFt?: number
+  distanceMiles: number
+  siteCode: string
+  isLive: boolean
 }
 
 export function LookupView({ active }: { active: boolean }) {
   const { sensors, currentLang, setRegisteredAddress } = useApp()
   const [address, setAddress] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<LookupResult | null>(null)
+  const [phone, setPhone] = useState('')
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [subscribeState, setSubscribeState] = useState<'idle' | 'entering' | 'done'>('idle')
 
-  function runLookup(addr: string) {
+  async function runLookup(addr: string) {
     if (!addr.trim()) return
-    setRegisteredAddress(addr)
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setSubscribeState('idle')
+    setPhone('')
+    setPhoneError(null)
 
-    const lower = addr.toLowerCase()
-    let nh = NEIGHBORHOODS.find(n => lower.includes(n.name.toLowerCase()))
-    if (!nh) nh = NEIGHBORHOODS[Math.floor(Math.random() * NEIGHBORHOODS.length)]!
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addr)}&key=${MAPS_KEY}`
+      const res = await fetch(url)
+      const data = await res.json()
 
-    const nearby = sensors.filter(s => {
-      const dx = s.x - nh!.x
-      const dy = s.y - nh!.y
-      return Math.sqrt(dx * dx + dy * dy) < 100
-    })
-    const avg = nearby.length
-      ? nearby.reduce((a, s) => a + s.level, 0) / nearby.length
-      : 30
+      if (data.status !== 'OK' || !data.results?.length) {
+        setError('Address not found. Please enter a valid Houston, TX address.')
+        return
+      }
 
-    const status: LookupResult['status'] = avg > 80 ? 'alert' : avg > 60 ? 'watch' : 'safe'
-    setResult({ status, neighborhood: nh!.name, avgLevel: avg, sensorCount: nearby.length })
+      const geocodeResult = data.results[0]
+      const { lat, lng } = geocodeResult.geometry.location as { lat: number; lng: number }
+      const formattedAddress: string = geocodeResult.formatted_address
+
+      const isHouston =
+        formattedAddress.includes('Houston, TX') ||
+        formattedAddress.includes('Houston, Texas')
+
+      if (!isHouston) {
+        setError("That address isn't in Houston, TX. Please enter a Houston address.")
+        return
+      }
+
+      // Extract neighborhood label from Google components
+      const components = geocodeResult.address_components as Array<{
+        long_name: string
+        types: string[]
+      }>
+      const neighborhoodComp = components.find(c => c.types.includes('neighborhood'))
+      const sublocalityComp = components.find(c => c.types.includes('sublocality_level_1'))
+      const neighborhood = neighborhoodComp?.long_name ?? sublocalityComp?.long_name ?? 'Houston'
+
+      // Find nearest USGS gauge by straight-line distance
+      let nearestCode = '08075000' // Brays Bayou as default
+      let minDist = Infinity
+      for (const [code, coords] of Object.entries(GAUGE_LOCATIONS)) {
+        const dist = haversineMiles(lat, lng, coords.lat, coords.lng)
+        if (dist < minDist) {
+          minDist = dist
+          nearestCode = code
+        }
+      }
+
+      const gauge = GAUGE_LOCATIONS[nearestCode]!
+      const sensor =
+        sensors.find(s => s.siteCode === nearestCode) ?? sensors[gauge.sensorIndex]
+      const level = sensor?.level ?? 35
+      const status: LookupResult['status'] = level > 80 ? 'alert' : level > 60 ? 'watch' : 'safe'
+
+      setResult({
+        status,
+        neighborhood,
+        formattedAddress,
+        sensorName: gauge.name,
+        bayou: gauge.bayou,
+        sensorLevel: level,
+        stageFt: sensor?.stageFt,
+        distanceMiles: minDist,
+        siteCode: nearestCode,
+        isLive: sensor?.hasRealData ?? false,
+      })
+    } catch {
+      setError('Failed to validate address. Please check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
   }
+
+  function handleSubscribe() {
+    if (subscribeState === 'idle') {
+      setSubscribeState('entering')
+      return
+    }
+    if (subscribeState === 'entering') {
+      const digits = phone.replace(/\D/g, '')
+      if (digits.length < 10) {
+        setPhoneError('Please enter a valid 10-digit phone number.')
+        return
+      }
+      setPhoneError(null)
+      localStorage.setItem('bw_registered_address', result!.formattedAddress)
+      localStorage.setItem('bw_registered_phone', phone)
+      setRegisteredAddress(result!.formattedAddress)
+      setSubscribeState('done')
+    }
+  }
+
+  const subscribeLabel =
+    subscribeState === 'entering' ? 'Confirm Subscription' : 'Subscribe to Alerts'
+
+  const subscribeClass =
+    result?.status === 'alert'
+      ? styles.buttonSecondary
+      : result?.status === 'watch'
+      ? styles.buttonAmber
+      : styles.buttonSecondary
 
   return (
     <div className={`${styles.view} ${active ? styles.active : ''}`}>
@@ -53,43 +173,87 @@ export function LookupView({ active }: { active: boolean }) {
         <input
           type="text"
           className={styles.input}
-          placeholder="e.g., 4200 Lockwood Dr, Kashmere Gardens"
+          placeholder="e.g., 4200 Lockwood Dr, Houston, TX"
           value={address}
           onChange={e => setAddress(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && runLookup(address)}
         />
-        <button className={styles.button} onClick={() => runLookup(address)}>
-          {t(currentLang, 'checkRisk')}
+        <button className={styles.button} onClick={() => runLookup(address)} disabled={loading}>
+          {loading ? 'Validating...' : t(currentLang, 'checkRisk')}
         </button>
+
+        {error && <div className={styles.errorBox}>{error}</div>}
 
         {result && (
           <div className={styles.resultBox}>
             <div className={`${styles.resultStatus} ${styles[result.status]}`}>
-              {result.status === 'alert' ? '⚠ FLOOD ALERT' : result.status === 'watch' ? '◐ WATCH' : '✓ SAFE'}
+              {result.status === 'alert'
+                ? '⚠ FLOOD ALERT'
+                : result.status === 'watch'
+                ? '◐ WATCH'
+                : '✓ SAFE'}
             </div>
             <p className={styles.resultDetail}>
-              <strong>{result.neighborhood}</strong> is at{' '}
-              <strong style={{ color: result.status === 'alert' ? 'var(--accent-red)' : result.status === 'watch' ? 'var(--accent-amber)' : 'var(--accent-green)' }}>
-                {result.avgLevel.toFixed(0)}% capacity
-              </strong>
-              {result.status === 'alert' && '. Flooding likely within 30–60 minutes. '}
-              {result.status === 'watch' && `. Monitor conditions. ${result.sensorCount} nearby sensors reporting.`}
-              {result.status === 'safe' && `. All ${result.sensorCount} nearby sensors reporting normal water levels.`}
+              <strong>{result.neighborhood}</strong> — nearest sensor:{' '}
+              <strong>{result.sensorName}</strong> ({result.distanceMiles.toFixed(1)} mi away)
+              {result.isLive && <span className={styles.liveBadge}> LIVE</span>}
             </p>
-            <div className={styles.resultActions}>
-              {result.status === 'alert' && (
+            <p className={styles.resultDetail}>
+              {result.bayou} is at{' '}
+              <strong
+                style={{
+                  color:
+                    result.status === 'alert'
+                      ? 'var(--accent-red)'
+                      : result.status === 'watch'
+                      ? 'var(--accent-amber)'
+                      : 'var(--accent-green)',
+                }}
+              >
+                {result.sensorLevel.toFixed(0)}% capacity
+              </strong>
+              {result.stageFt !== undefined && ` (${result.stageFt.toFixed(1)} ft)`}
+              {result.status === 'alert' && ' — Flooding likely within 30–60 minutes.'}
+              {result.status === 'watch' && ' — Monitor conditions closely.'}
+              {result.status === 'safe' && ' — Normal water levels.'}
+            </p>
+
+            {subscribeState === 'done' ? (
+              <div className={styles.subscribeSuccess}>
+                ✓ Subscribed! Flood alerts for <strong>{result.neighborhood}</strong> will
+                be sent to {phone}.
+              </div>
+            ) : (
+              <div className={styles.resultActions}>
+                {subscribeState === 'entering' && (
+                  <>
+                    <input
+                      type="tel"
+                      className={`${styles.input} ${styles.phoneInput}`}
+                      placeholder="Phone number (e.g., 713-555-0100)"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+                      autoFocus
+                    />
+                    {phoneError && <div className={styles.errorBox}>{phoneError}</div>}
+                  </>
+                )}
                 <div className={styles.actionGrid}>
-                  <button className={`${styles.button} ${styles.buttonDanger}`}>View Evacuation Routes</button>
-                  <button className={`${styles.button} ${styles.buttonSecondary}`}>Subscribe to SMS</button>
+                  {result.status === 'alert' && (
+                    <button className={`${styles.button} ${styles.buttonDanger}`}>
+                      View Evacuation Routes
+                    </button>
+                  )}
+                  <button
+                    className={`${styles.button} ${subscribeClass}`}
+                    onClick={handleSubscribe}
+                  >
+                    {subscribeLabel}
+                  </button>
                 </div>
-              )}
-              {result.status === 'watch' && (
-                <button className={`${styles.button} ${styles.buttonAmber}`}>Subscribe to Alerts</button>
-              )}
-              {result.status === 'safe' && (
-                <button className={`${styles.button} ${styles.buttonSecondary}`}>Subscribe to Future Alerts</button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -104,7 +268,7 @@ export function LookupView({ active }: { active: boolean }) {
               key={n.id}
               className={styles.quickBtn}
               onClick={() => {
-                const addr = `1234 Main St, ${n.name}, Houston, TX`
+                const addr = `${n.name}, Houston, TX`
                 setAddress(addr)
                 runLookup(addr)
               }}

@@ -59,7 +59,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     text: '',
     timeLabel: '',
   })
-  const [registeredAddress, setRegisteredAddress] = useState('')
+  const [registeredAddress, setRegisteredAddressState] = useState('')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('bw_registered_address')
+    if (saved) setRegisteredAddressState(saved)
+  }, [])
+
+  const setRegisteredAddress = useCallback((addr: string) => {
+    setRegisteredAddressState(addr)
+    localStorage.setItem('bw_registered_address', addr)
+  }, [])
   const [isSimulationRunning, setIsSimulationRunningState] = useState(false)
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [gaugeData, setGaugeData] = useState<GaugeData | null>(null)

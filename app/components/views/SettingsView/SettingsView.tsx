@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '@/app/context/AppContext'
 import { t } from '@/app/lib/i18n'
 import styles from './SettingsView.module.css'
@@ -23,6 +23,12 @@ export function SettingsView({ active }: { active: boolean }) {
   const [email, setEmail] = useState(false)
   const [watch, setWatch] = useState(true)
   const [critical, setCritical] = useState(false)
+  const [registeredPhone, setRegisteredPhone] = useState('')
+
+  useEffect(() => {
+    const phone = localStorage.getItem('bw_registered_phone') ?? ''
+    setRegisteredPhone(phone)
+  }, [active])
 
   return (
     <div className={`${styles.view} ${active ? styles.active : ''}`}>
@@ -81,7 +87,9 @@ export function SettingsView({ active }: { active: boolean }) {
         <div className={styles.settingRow}>
           <div>
             <div className={styles.settingLabel}>Phone Number</div>
-            <div className={styles.settingDesc}>+1 (713) ███-██42</div>
+            <div className={styles.settingDesc}>
+              {registeredPhone || 'Not set — subscribe via Check My Address'}
+            </div>
           </div>
           <button className={styles.editBtn}>Edit</button>
         </div>
@@ -89,7 +97,7 @@ export function SettingsView({ active }: { active: boolean }) {
           <div>
             <div className={styles.settingLabel}>Registered Address</div>
             <div className={styles.settingDesc}>
-              {registeredAddress || 'Not set — please register'}
+              {registeredAddress || 'Not set — use Check My Address to register'}
             </div>
           </div>
           <button className={styles.editBtn}>Update</button>
