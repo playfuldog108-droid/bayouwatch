@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useApp } from '@/app/context/AppContext'
 import { t } from '@/app/lib/i18n'
 import { NEIGHBORHOODS } from '@/app/lib/data'
+import { FloodMap, type SensorPin } from './FloodMap'
 import styles from './LookupView.module.css'
 
 const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
@@ -34,6 +35,8 @@ interface LookupResult {
   status: 'safe' | 'watch' | 'alert'
   neighborhood: string
   formattedAddress: string
+  lat: number
+  lng: number
   sensorName: string
   bayou: string
   sensorLevel: number
@@ -41,6 +44,7 @@ interface LookupResult {
   distanceMiles: number
   siteCode: string
   isLive: boolean
+  nearbyPins: SensorPin[]
 }
 
 export function LookupView({ active }: { active: boolean }) {
@@ -63,9 +67,12 @@ export function LookupView({ active }: { active: boolean }) {
     setPhoneError(null)
 
     try {
+      console.log('[LookupView] MAPS_KEY:', MAPS_KEY ? `${MAPS_KEY.slice(0, 8)}...` : 'UNDEFINED — restart dev server')
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addr)}&key=${MAPS_KEY}`
+      console.log('[LookupView] Geocoding URL:', url)
       const res = await fetch(url)
       const data = await res.json()
+      console.log('[LookupView] Geocoding response status:', data.status, '| error_message:', data.error_message ?? 'none')
 
       if (data.status !== 'OK' || !data.results?.length) {
         setError('Address not found. Please enter a valid Houston, TX address.')
@@ -94,34 +101,51 @@ export function LookupView({ active }: { active: boolean }) {
       const sublocalityComp = components.find(c => c.types.includes('sublocality_level_1'))
       const neighborhood = neighborhoodComp?.long_name ?? sublocalityComp?.long_name ?? 'Houston'
 
-      // Find nearest USGS gauge by straight-line distance
-      let nearestCode = '08075000' // Brays Bayou as default
-      let minDist = Infinity
-      for (const [code, coords] of Object.entries(GAUGE_LOCATIONS)) {
-        const dist = haversineMiles(lat, lng, coords.lat, coords.lng)
-        if (dist < minDist) {
-          minDist = dist
-          nearestCode = code
-        }
-      }
+      // Sort all gauges by distance, take nearest 4
+      const sorted = Object.entries(GAUGE_LOCATIONS)
+        .map(([code, coords]) => ({
+          code,
+          coords,
+          dist: haversineMiles(lat, lng, coords.lat, coords.lng),
+        }))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 4)
 
-      const gauge = GAUGE_LOCATIONS[nearestCode]!
-      const sensor =
-        sensors.find(s => s.siteCode === nearestCode) ?? sensors[gauge.sensorIndex]
-      const level = sensor?.level ?? 35
-      const status: LookupResult['status'] = level > 80 ? 'alert' : level > 60 ? 'watch' : 'safe'
+      const nearbyPins: SensorPin[] = sorted.map(({ code, coords, dist }) => {
+        const gauge = GAUGE_LOCATIONS[code]!
+        const sensor = sensors.find(s => s.siteCode === code) ?? sensors[gauge.sensorIndex]
+        const level = sensor?.level ?? 35
+        return {
+          lat: coords.lat,
+          lng: coords.lng,
+          name: gauge.name,
+          bayou: gauge.bayou,
+          siteCode: code,
+          level,
+          stageFt: sensor?.stageFt,
+          status: level > 80 ? 'alert' : level > 60 ? 'watch' : 'safe',
+          distanceMiles: dist,
+        }
+      })
+
+      // Primary sensor is the nearest one
+      const primary = nearbyPins[0]!
+      const status = primary.status
 
       setResult({
         status,
         neighborhood,
         formattedAddress,
-        sensorName: gauge.name,
-        bayou: gauge.bayou,
-        sensorLevel: level,
-        stageFt: sensor?.stageFt,
-        distanceMiles: minDist,
-        siteCode: nearestCode,
-        isLive: sensor?.hasRealData ?? false,
+        lat,
+        lng,
+        sensorName: primary.name,
+        bayou: primary.bayou,
+        sensorLevel: primary.level,
+        stageFt: primary.stageFt,
+        distanceMiles: primary.distanceMiles,
+        siteCode: primary.siteCode,
+        isLive: sensors.find(s => s.siteCode === primary.siteCode)?.hasRealData ?? false,
+        nearbyPins,
       })
     } catch {
       setError('Failed to validate address. Please check your connection and try again.')
@@ -185,76 +209,85 @@ export function LookupView({ active }: { active: boolean }) {
         {error && <div className={styles.errorBox}>{error}</div>}
 
         {result && (
-          <div className={styles.resultBox}>
-            <div className={`${styles.resultStatus} ${styles[result.status]}`}>
-              {result.status === 'alert'
-                ? '⚠ FLOOD ALERT'
-                : result.status === 'watch'
-                ? '◐ WATCH'
-                : '✓ SAFE'}
-            </div>
-            <p className={styles.resultDetail}>
-              <strong>{result.neighborhood}</strong> — nearest sensor:{' '}
-              <strong>{result.sensorName}</strong> ({result.distanceMiles.toFixed(1)} mi away)
-              {result.isLive && <span className={styles.liveBadge}> LIVE</span>}
-            </p>
-            <p className={styles.resultDetail}>
-              {result.bayou} is at{' '}
-              <strong
-                style={{
-                  color:
-                    result.status === 'alert'
-                      ? 'var(--accent-red)'
-                      : result.status === 'watch'
-                      ? 'var(--accent-amber)'
-                      : 'var(--accent-green)',
-                }}
-              >
-                {result.sensorLevel.toFixed(0)}% capacity
-              </strong>
-              {result.stageFt !== undefined && ` (${result.stageFt.toFixed(1)} ft)`}
-              {result.status === 'alert' && ' — Flooding likely within 30–60 minutes.'}
-              {result.status === 'watch' && ' — Monitor conditions closely.'}
-              {result.status === 'safe' && ' — Normal water levels.'}
-            </p>
+          <>
+            <div className={styles.resultBox}>
+              <div className={`${styles.resultStatus} ${styles[result.status]}`}>
+                {result.status === 'alert'
+                  ? '⚠ FLOOD ALERT'
+                  : result.status === 'watch'
+                  ? '◐ WATCH'
+                  : '✓ SAFE'}
+              </div>
+              <p className={styles.resultDetail}>
+                <strong>{result.neighborhood}</strong> — nearest sensor:{' '}
+                <strong>{result.sensorName}</strong> ({result.distanceMiles.toFixed(1)} mi away)
+                {result.isLive && <span className={styles.liveBadge}> LIVE</span>}
+              </p>
+              <p className={styles.resultDetail}>
+                {result.bayou} is at{' '}
+                <strong
+                  style={{
+                    color:
+                      result.status === 'alert'
+                        ? 'var(--accent-red)'
+                        : result.status === 'watch'
+                        ? 'var(--accent-amber)'
+                        : 'var(--accent-green)',
+                  }}
+                >
+                  {result.sensorLevel.toFixed(0)}% capacity
+                </strong>
+                {result.stageFt !== undefined && ` (${result.stageFt.toFixed(1)} ft)`}
+                {result.status === 'alert' && ' — Flooding likely within 30–60 minutes.'}
+                {result.status === 'watch' && ' — Monitor conditions closely.'}
+                {result.status === 'safe' && ' — Normal water levels.'}
+              </p>
 
-            {subscribeState === 'done' ? (
-              <div className={styles.subscribeSuccess}>
-                ✓ Subscribed! Flood alerts for <strong>{result.neighborhood}</strong> will
-                be sent to {phone}.
-              </div>
-            ) : (
-              <div className={styles.resultActions}>
-                {subscribeState === 'entering' && (
-                  <>
-                    <input
-                      type="tel"
-                      className={`${styles.input} ${styles.phoneInput}`}
-                      placeholder="Phone number (e.g., 713-555-0100)"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
-                      autoFocus
-                    />
-                    {phoneError && <div className={styles.errorBox}>{phoneError}</div>}
-                  </>
-                )}
-                <div className={styles.actionGrid}>
-                  {result.status === 'alert' && (
-                    <button className={`${styles.button} ${styles.buttonDanger}`}>
-                      View Evacuation Routes
-                    </button>
-                  )}
-                  <button
-                    className={`${styles.button} ${subscribeClass}`}
-                    onClick={handleSubscribe}
-                  >
-                    {subscribeLabel}
-                  </button>
+              {subscribeState === 'done' ? (
+                <div className={styles.subscribeSuccess}>
+                  ✓ Subscribed! Flood alerts for <strong>{result.neighborhood}</strong> will
+                  be sent to {phone}.
                 </div>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className={styles.resultActions}>
+                  {subscribeState === 'entering' && (
+                    <>
+                      <input
+                        type="tel"
+                        className={`${styles.input} ${styles.phoneInput}`}
+                        placeholder="Phone number (e.g., 713-555-0100)"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+                        autoFocus
+                      />
+                      {phoneError && <div className={styles.errorBox}>{phoneError}</div>}
+                    </>
+                  )}
+                  <div className={styles.actionGrid}>
+                    {result.status === 'alert' && (
+                      <button className={`${styles.button} ${styles.buttonDanger}`}>
+                        View Evacuation Routes
+                      </button>
+                    )}
+                    <button
+                      className={`${styles.button} ${subscribeClass}`}
+                      onClick={handleSubscribe}
+                    >
+                      {subscribeLabel}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <FloodMap
+              lat={result.lat}
+              lng={result.lng}
+              formattedAddress={result.formattedAddress}
+              sensorPins={result.nearbyPins}
+            />
+          </>
         )}
       </div>
 

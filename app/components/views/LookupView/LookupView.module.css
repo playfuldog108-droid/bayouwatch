@@ -97,6 +97,32 @@
 .quickBtnName { font-weight:600; }
 .quickBtnPop  { font-size:10px; color:var(--text-dim); font-family:var(--mono); }
 .button:disabled { opacity: 0.55; cursor: not-allowed; }
+.mapWrapper {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mapLegend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.legendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  vertical-align: middle;
+}
+.mapContainer { height: 360px; width: 100%; display: block; }
 .errorBox {
   margin-top: 10px;
   padding: 10px 14px;

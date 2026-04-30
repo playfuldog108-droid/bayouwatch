@@ -14,7 +14,10 @@
       "WebFetch(domain:water.noaa.gov)",
       "WebFetch(domain:water.weather.gov)",
       "WebFetch(domain:api.water.noaa.gov)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(taskkill *)",
+      "PowerShell(Stop-Process *)",
+      "Bash(npm run *)"
     ]
   }
 }
