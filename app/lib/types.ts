@@ -13,6 +13,9 @@ export interface Sensor {
   stageFt?: number   // real USGS stage reading in feet
   siteCode?: string  // USGS site code when backed by real data
   hasRealData?: boolean
+  lat?: number       // GPS latitude
+  lng?: number       // GPS longitude
+  bayou?: string     // Waterway name
 }
 
 export interface GaugeReading {

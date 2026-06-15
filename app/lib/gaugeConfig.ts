@@ -5,6 +5,8 @@ export interface GaugeConfig {
   baseLevel: number       // ft — water level that maps to 0%
   floodStage: number      // ft — NWS minor flood stage
   majorFloodStage: number // ft — maps to 100%
+  lat: number             // GPS latitude
+  lng: number             // GPS longitude
 }
 
 // Active USGS stream gauges in Harris County with flood thresholds from NWS/HCFWS.
@@ -17,6 +19,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 25,
     floodStage: 60,
     majorFloodStage: 65,
+    lat: 29.7587,
+    lng: -95.5975,
   },
   '08073700': {
     sensorIndex: 1,
@@ -25,6 +29,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 20,
     floodStage: 52,
     majorFloodStage: 60,
+    lat: 29.7524,
+    lng: -95.5133,
   },
   '08074250': {
     sensorIndex: 13,
@@ -33,6 +39,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 40,
     floodStage: 54,
     majorFloodStage: 58,
+    lat: 29.6987,
+    lng: -95.3654,
   },
   '08074500': {
     sensorIndex: 17,
@@ -41,6 +49,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 0,
     floodStage: 32,
     majorFloodStage: 36,
+    lat: 29.7810,
+    lng: -95.3987,
   },
   '08075000': {
     sensorIndex: 28,
@@ -49,6 +59,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 10,
     floodStage: 41,
     majorFloodStage: 43,
+    lat: 29.7235,
+    lng: -95.3973,
   },
   '08075500': {
     sensorIndex: 26,
@@ -57,6 +69,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 0,
     floodStage: 26,
     majorFloodStage: 28,
+    lat: 29.6821,
+    lng: -95.3654,
   },
   '08076000': {
     sensorIndex: 41,
@@ -65,6 +79,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 30,
     floodStage: 55,
     majorFloodStage: 59,
+    lat: 29.8254,
+    lng: -95.2540,
   },
   '08076700': {
     sensorIndex: 43,
@@ -73,6 +89,8 @@ export const GAUGE_CONFIG: Record<string, GaugeConfig> = {
     baseLevel: 0,
     floodStage: 18,
     majorFloodStage: 24,
+    lat: 29.8654,
+    lng: -95.1810,
   },
 }
 

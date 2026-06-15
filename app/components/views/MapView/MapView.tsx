@@ -14,11 +14,15 @@ interface TooltipState {
   y: number
 }
 
-function getBayou(sensor: Sensor): string {
-  if (sensor.y < 305) return 'White Oak Bayou'
-  if (sensor.y < 395) return 'Buffalo Bayou'
-  if (sensor.y < 460) return 'Brays Bayou'
-  return 'Sims Bayou'
+// Calibrated to Houston's Beltway 8 extents on the SVG viewBox (0 0 1000 600).
+// Beltway 8 ellipse: cx=490 cy=372 rx=368 ry=213 ↔ ~29.57–29.89 N, ~95.08–95.73 W
+const MAP_BOUNDS = { latN: 29.89, latS: 29.57, lngW: -95.73, lngE: -95.08 }
+const SVG_BOUNDS = { xL: 122, xR: 858, yT: 159, yB: 585 }
+
+function latLngToSvg(lat: number, lng: number): { x: number; y: number } {
+  const x = SVG_BOUNDS.xL + ((lng - MAP_BOUNDS.lngW) / (MAP_BOUNDS.lngE - MAP_BOUNDS.lngW)) * (SVG_BOUNDS.xR - SVG_BOUNDS.xL)
+  const y = SVG_BOUNDS.yT + ((MAP_BOUNDS.latN - lat) / (MAP_BOUNDS.latN - MAP_BOUNDS.latS)) * (SVG_BOUNDS.yB - SVG_BOUNDS.yT)
+  return { x: Math.round(x), y: Math.round(y) }
 }
 
 export function MapView({ active }: { active: boolean }) {
@@ -27,11 +31,13 @@ export function MapView({ active }: { active: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null)
   const localTime = useClock()
 
-  const handleSensorEnter = useCallback((sensor: Sensor, e: React.MouseEvent) => {
+  const liveGauges = sensors.filter(s => s.hasRealData && s.lat != null && s.lng != null)
+
+  const handleSensorEnter = useCallback((sensor: Sensor, svgX: number, svgY: number) => {
     if (!svgRef.current) return
     const rect = svgRef.current.getBoundingClientRect()
-    const sx = (sensor.x / 1000) * rect.width
-    const sy = (sensor.y / 600) * rect.height
+    const sx = (svgX / 1000) * rect.width
+    const sy = (svgY / 600) * rect.height
     setTooltip({ sensor, x: sx + 14, y: Math.max(8, sy - 90) })
   }, [])
 
@@ -195,40 +201,41 @@ export function MapView({ active }: { active: boolean }) {
             </text>
           ))}
 
-          {/* Sensors */}
-          {sensors.map(s => {
+          {/* Live USGS/Harris County gauges at real GPS coordinates */}
+          {liveGauges.map(s => {
+            const { x, y } = latLngToSvg(s.lat!, s.lng!)
             const color = s.level > 80 ? '#ff3860' : s.level > 60 ? '#ffb547' : '#00d97e'
             return (
               <g key={s.id}>
                 {/* Pulsing ring for critical */}
                 {s.level > 80 && (
-                  <circle cx={s.x} cy={s.y} r={5} fill={color} opacity={0.3}>
+                  <circle cx={x} cy={y} r={5} fill={color} opacity={0.3}>
                     <animate attributeName="r" from="5" to="20" dur="1.5s" repeatCount="indefinite" />
                     <animate attributeName="opacity" from="0.55" to="0" dur="1.5s" repeatCount="indefinite" />
                   </circle>
                 )}
                 {/* Outer ring for watch+ */}
                 {s.level > 60 && (
-                  <circle cx={s.x} cy={s.y} r={9}
+                  <circle cx={x} cy={y} r={9}
                     fill="none" stroke={color} strokeWidth="1"
                     opacity={0.3}
                   />
                 )}
-                {/* Main sensor dot */}
+                {/* Main gauge dot */}
                 <circle
-                  cx={s.x}
-                  cy={s.y}
-                  r={5}
+                  cx={x}
+                  cy={y}
+                  r={6}
                   fill={color}
                   stroke="#050b14"
                   strokeWidth="1.5"
                   filter="url(#glow)"
                   style={{ cursor: 'pointer' }}
-                  onMouseEnter={e => handleSensorEnter(s, e)}
+                  onMouseEnter={() => handleSensorEnter(s, x, y)}
                   onMouseLeave={handleSensorLeave}
                 />
                 {/* Inner detail dot */}
-                <circle cx={s.x} cy={s.y} r={2} fill="#050b14" style={{ pointerEvents: 'none' }} />
+                <circle cx={x} cy={y} r={2.5} fill="#050b14" style={{ pointerEvents: 'none' }} />
               </g>
             )
           })}
@@ -236,7 +243,7 @@ export function MapView({ active }: { active: boolean }) {
 
         <div className={styles.mapOverlay}>
           <div>NETWORK STATUS</div>
-          <div><strong>{sensors.length}</strong> sensors active</div>
+          <div><strong>{liveGauges.length}</strong> gauges live</div>
           <div>Last sync: <strong>{localTime}</strong></div>
         </div>
 
@@ -260,16 +267,21 @@ export function MapView({ active }: { active: boolean }) {
             className={styles.sensorDetail}
             style={{ left: tooltip.x, top: tooltip.y }}
           >
-            <div className={styles.sdId}>{tooltip.sensor.id}</div>
             <div className={styles.sdName}>{tooltip.sensor.name}</div>
             <div className={styles.sdRow}>
-              <span>Bayou</span>
+              <span>Waterway</span>
               <span style={{ color: 'var(--accent-cyan)', fontStyle: 'italic' }}>
-                {getBayou(tooltip.sensor)}
+                {tooltip.sensor.bayou ?? '—'}
               </span>
             </div>
+            {tooltip.sensor.stageFt != null && (
+              <div className={styles.sdRow}>
+                <span>Stage</span>
+                <span>{tooltip.sensor.stageFt.toFixed(2)} ft</span>
+              </div>
+            )}
             <div className={styles.sdRow}>
-              <span>Water level</span>
+              <span>Flood capacity</span>
               <span>{tooltip.sensor.level.toFixed(1)}%</span>
             </div>
             <div className={styles.sdLevelBar}>
@@ -286,8 +298,8 @@ export function MapView({ active }: { active: boolean }) {
               />
             </div>
             <div className={styles.sdRow}>
-              <span>Threshold</span>
-              <span>{tooltip.sensor.threshold}%</span>
+              <span>USGS site</span>
+              <span style={{ color: 'var(--accent-cyan)' }}>{tooltip.sensor.siteCode ?? '—'}</span>
             </div>
             <div className={styles.sdRow}>
               <span>Status</span>

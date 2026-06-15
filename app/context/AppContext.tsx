@@ -216,6 +216,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
                   stageFt: reading.stageFt,
                   siteCode: reading.siteCode,
                   hasRealData: true,
+                  lat: config.lat,
+                  lng: config.lng,
+                  bayou: config.bayou,
                 }
               }
             }
