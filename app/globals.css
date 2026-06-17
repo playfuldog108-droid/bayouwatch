@@ -29,10 +29,10 @@
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 
-/* html carries the animated gradient layer */
+/* html carries the animated gradient layer — fixed so it stays put while the page scrolls */
 html {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  scroll-behavior: smooth;
   background: linear-gradient(
     -45deg,
     #000c18 0%,
@@ -45,13 +45,13 @@ html {
     #000c18 100%
   );
   background-size: 400% 400%;
+  background-attachment: fixed;
   animation: gradientFlow 28s ease infinite;
 }
 
-/* body acts as a dark vignette — center stays near-black, gradient glows at edges */
+/* body acts as a dark vignette — fixed so it stays centered in viewport during scroll */
 body {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
   font-family: var(--body);
   color: #ffffff;
   font-size: 14px;
@@ -65,6 +65,7 @@ body {
     rgba(0,0,0,0.28) 82%,
     rgba(0,0,0,0.00) 100%
   );
+  background-attachment: fixed;
 }
 
 ::-webkit-scrollbar       { width:4px; height:4px; }

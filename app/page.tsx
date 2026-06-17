@@ -13,6 +13,7 @@ import { SimulationView } from '@/app/components/views/SimulationView/Simulation
 import { SettingsView } from '@/app/components/views/SettingsView/SettingsView'
 import { AboutView } from '@/app/components/views/AboutView/AboutView'
 import { BottomNav } from '@/app/components/BottomNav/BottomNav'
+import { HeroSection } from '@/app/components/HeroSection/HeroSection'
 import styles from './page.module.css'
 
 function LoadingScreen({ onDone }: { onDone: () => void }) {
@@ -64,7 +65,10 @@ export default function Page() {
   return (
     <AppProvider>
       {loading && <LoadingScreen onDone={handleDone} />}
-      <AppShell />
+      <HeroSection />
+      <div id="dashboard-section" className={styles.dashboardSection}>
+        <AppShell />
+      </div>
     </AppProvider>
   )
 }
