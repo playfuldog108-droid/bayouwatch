@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { JetBrains_Mono, Inter } from 'next/font/google'
+import { JetBrains_Mono, Inter, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 
 const jetbrainsMono = JetBrains_Mono({
@@ -12,6 +12,11 @@ const inter = Inter({
   weight: ['400','500','600','700'],
   variable: '--font-body',
 })
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400','500','600','700'],
+  variable: '--font-display',
+})
 
 export const metadata: Metadata = {
   title: 'BayouWatch — Houston Flood Alert System',
@@ -21,7 +26,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${jetbrainsMono.variable} ${inter.variable}`}>
+      <body className={`${jetbrainsMono.variable} ${inter.variable} ${spaceGrotesk.variable}`}>
         {children}
       </body>
     </html>

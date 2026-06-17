@@ -1,124 +1,58 @@
 .header {
   grid-area: header;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
+  background: transparent;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 32px;
   gap: 24px;
   z-index: 10;
-}
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--body);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.01em;
-}
-.logoMark {
-  width: 30px; height: 30px;
-  background: var(--bg-elev);
-  border: 1px solid var(--accent-cyan);
-  border-radius: 7px;
-  display: grid; place-items: center;
   position: relative;
+}
+.wordmark {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-transform: uppercase;
   flex-shrink: 0;
 }
-.logoMark::before {
-  content: '';
-  position: absolute;
-  inset: 7px;
-  border: 2px solid var(--accent-cyan);
-  border-radius: 3px;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  transform: rotate(-45deg);
-}
-.logoText { color: var(--text-primary); }
-.logoText span { color: var(--accent-cyan); }
-
-.systemStatus {
+.center {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-secondary);
+  justify-content: center;
+  gap: 10px;
 }
-.pulseDot {
-  width: 8px; height: 8px;
+.statusDot {
+  width: 7px;
+  height: 7px;
   background: var(--accent-green);
   border-radius: 50%;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
 }
-.spacer { flex: 1; }
-.meta {
-  display: flex;
-  gap: 20px;
+.statusText {
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-.meta b { color: var(--text-primary); font-weight: 500; }
-.langSelect {
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-family: var(--body);
-  font-size: 12px;
-  cursor: pointer;
-}
-.weatherChip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 12px;
-  background: rgba(0,229,255,0.04);
-  border: 1px solid rgba(0,229,255,0.12);
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.weatherCity {
-  color: var(--accent-cyan);
-  font-weight: 600;
-  letter-spacing: 0.04em;
   font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
 }
-.weatherTemp {
-  color: var(--text-primary);
+.clock {
+  font-family: var(--mono);
+  font-size: 13px;
   font-weight: 500;
-}
-.weatherSep {
-  opacity: 0.25;
-}
-.weatherRainHeavy {
-  color: var(--accent-red);
-  font-weight: 600;
-}
-.weatherRainLight {
-  color: var(--accent-amber);
-}
-.weatherLoading {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+  min-width: 80px;
+  text-align: right;
 }
 @media (max-width: 767px) {
-  .meta { display: none; }
-  .langSelect { display: none; }
-  .weatherChip { display: none; }
-  .header { padding: 0 16px; gap: 12px; }
-  .logo { font-size: 16px; }
+  .header { padding: 0 20px; }
+  .wordmark { font-size: 14px; letter-spacing: 0.14em; }
+  .statusText { display: none; }
+  .clock { font-size: 12px; }
 }

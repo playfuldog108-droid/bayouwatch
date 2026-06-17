@@ -144,7 +144,7 @@ export function SimulationView({ active }: { active: boolean }) {
     : 'Aug 25, 2017 — 06:24 CST'
 
   const progress = (step / HARVEY_DATA.length) * 100
-  const { line, area } = buildSimPath(chartData, 600, 200)
+  const { line } = buildSimPath(chartData, 600, 200)
 
   return (
     <div className={`${styles.view} ${active ? styles.active : ''}`}>
@@ -169,22 +169,15 @@ export function SimulationView({ active }: { active: boolean }) {
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
             <div className={styles.panelTitle}>{t(currentLang, 'rainfallSim')}</div>
-            <div className={styles.panelTitle} style={{ color: running ? 'var(--accent-green)' : 'var(--text-dim)' }}>
+            <div className={styles.panelTitle} style={{ color: running ? 'var(--accent-green)' : 'rgba(255,255,255,0.15)' }}>
               {running ? '● RUNNING' : 'PAUSED'}
             </div>
           </div>
           <div className={styles.chart}>
             <svg className={styles.chartSvg} viewBox="0 0 600 200" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="simGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#ff3860" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="#ff3860" stopOpacity={0} />
-                </linearGradient>
-              </defs>
               <line className={styles.thresholdLine} x1="0" y1="40" x2="600" y2="40" />
-              <text x="595" y="35" textAnchor="end" fill="#ff3860" fontFamily="var(--mono)" fontSize="9">CRITICAL</text>
-              <path d={area} fill="url(#simGrad)" opacity={0.4} />
-              <path d={line} stroke="#ff3860" strokeWidth="2" fill="none" style={{ filter: 'drop-shadow(0 0 4px #ff3860)' }} />
+              <text x="598" y="35" textAnchor="end" fill="rgba(239,68,68,0.6)" fontFamily="var(--mono)" fontSize="8" letterSpacing="1">CRITICAL</text>
+              <path d={line} className={styles.chartLine} />
             </svg>
           </div>
           <div className={styles.simProgress}>
@@ -217,22 +210,22 @@ export function SimulationView({ active }: { active: boolean }) {
           <div className={styles.panelTitle}>{t(currentLang, 'impactStats')}</div>
         </div>
         <div className={styles.impactGrid}>
-          <div>
+          <div className={styles.impactItem}>
             <div className={styles.impactLabel}>With BayouWatch</div>
             <div className={`${styles.impactValue} ${styles.green}`}>{stats?.lives ?? '--'}</div>
             <div className={styles.impactDesc}>lives potentially saved</div>
           </div>
-          <div>
+          <div className={styles.impactItem}>
             <div className={styles.impactLabel}>Avg Warning</div>
             <div className={`${styles.impactValue} ${styles.cyan}`}>{stats?.warning ?? '--'}</div>
             <div className={styles.impactDesc}>minutes ahead</div>
           </div>
-          <div>
+          <div className={styles.impactItem}>
             <div className={styles.impactLabel}>Streets Notified</div>
             <div className={`${styles.impactValue} ${styles.amber}`}>{stats?.streets ?? '--'}</div>
             <div className={styles.impactDesc}>in advance of flooding</div>
           </div>
-          <div>
+          <div className={styles.impactItem}>
             <div className={styles.impactLabel}>Languages</div>
             <div className={styles.impactValue}>5</div>
             <div className={styles.impactDesc}>simultaneous broadcast</div>

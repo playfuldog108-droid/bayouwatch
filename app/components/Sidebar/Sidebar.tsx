@@ -96,7 +96,7 @@ export function Sidebar() {
             ? 'var(--accent-red)'
             : isWatch
             ? 'var(--accent-amber)'
-            : '#2a4a6b'
+            : 'rgba(255,255,255,0.3)'
           return (
             <div
               key={n.id}

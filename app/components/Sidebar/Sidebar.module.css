@@ -1,104 +1,95 @@
 .sidebar {
   grid-area: sidebar;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
-  padding: 20px 0;
+  background: transparent;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 28px 0;
   overflow-y: auto;
 }
 @media (max-width: 767px) {
   .sidebar { display: none; }
 }
 .navSection {
-  padding: 0 16px;
-  margin-bottom: 24px;
+  padding: 0 20px;
+  margin-bottom: 32px;
 }
 .navLabel {
-  font-family: var(--body);
-  font-size: 10px;
+  font-family: var(--mono);
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-  padding: 0 8px;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.18);
+  margin-bottom: 12px;
+  padding: 0 4px;
 }
 .navItem {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 10px 4px;
+  border-radius: 0;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.35);
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   font-family: var(--body);
   background: transparent;
   border: none;
+  border-left: 2px solid transparent;
   text-align: left;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s;
   margin-bottom: 2px;
   user-select: none;
+  letter-spacing: 0.01em;
 }
 .navItem:hover {
-  background: var(--bg-elev);
-  color: var(--text-primary);
+  color: rgba(255,255,255,0.7);
 }
 .navItem.active {
-  background: linear-gradient(90deg, rgba(74,158,187,0.10), transparent);
-  color: var(--accent-cyan);
-  border-left: 2px solid var(--accent-cyan);
-  padding-left: 10px;
+  color: #ffffff;
+  border-left-color: #ffffff;
+  padding-left: 12px;
 }
 .navIcon {
-  width: 16px; height: 16px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
-  stroke-width: 2;
+  stroke-width: 1.5;
 }
+
+/* Watchlist rows — no cards, just clean rows */
 .nhCard {
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: 12px 4px;
+  margin-bottom: 0;
   cursor: pointer;
-  transition: all 0.15s;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.nhCard:hover {
-  border-color: var(--border-bright);
-  background: var(--bg-card);
-}
-.nhCardAlert {
-  border-color: var(--accent-red);
-  background: rgba(255,56,96,0.05);
-  animation: alertPulse 2s infinite;
-}
+.nhCard:last-child { border-bottom: none; }
+.nhCardAlert .nhName { color: var(--accent-red); }
 .nhName {
-  font-weight: 600;
-  font-size: 13px;
-  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 12px;
+  margin-bottom: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: rgba(255,255,255,0.75);
 }
 .nhStatus {
   font-family: var(--mono);
   font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 3px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
-.statusSafe  { background:rgba(42,74,107,0.3); color:var(--text-secondary); }
-.statusWatch { background:rgba(255,181,71,0.15); color:var(--accent-amber); }
-.statusAlert { background:rgba(255,56,96,0.15);  color:var(--accent-red); }
+.statusSafe  { color: rgba(255,255,255,0.25); }
+.statusWatch { color: var(--accent-amber); }
+.statusAlert { color: var(--accent-red); }
 .nhMeter {
-  height: 4px;
-  background: var(--bg-deep);
-  border-radius: 2px;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
   overflow: hidden;
-  margin-top: 6px;
+  margin-bottom: 5px;
 }
 .nhMeterFill {
   height: 100%;
@@ -108,7 +99,6 @@
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-dim);
-  margin-top: 4px;
+  font-size: 9px;
+  color: rgba(255,255,255,0.2);
 }

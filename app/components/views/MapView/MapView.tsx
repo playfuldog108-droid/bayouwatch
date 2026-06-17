@@ -45,13 +45,6 @@ export function MapView({ active }: { active: boolean }) {
 
   return (
     <div className={`${styles.view} ${active ? styles.active : ''}`}>
-      <div className={styles.viewHeader}>
-        <div>
-          <h1 className={styles.viewTitle}>{t(currentLang, 'mapTitle')}</h1>
-          <p className={styles.viewSubtitle}>{t(currentLang, 'mapSub')}</p>
-        </div>
-      </div>
-
       <div className={styles.mapContainer}>
         <svg
           ref={svgRef}
@@ -59,19 +52,11 @@ export function MapView({ active }: { active: boolean }) {
           viewBox="0 0 1000 600"
         >
           <defs>
-            <radialGradient id="mapBg" cx="50%" cy="40%">
-              <stop offset="0%"   stopColor="#0c1a2e" />
-              <stop offset="100%" stopColor="#050b14" />
-            </radialGradient>
-            <linearGradient id="bayouGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%"   stopColor="#003a8c" stopOpacity={0.45} />
-              <stop offset="100%" stopColor="#0066cc" stopOpacity={0.65} />
-            </linearGradient>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1d3654" strokeWidth="0.5" opacity={0.3} />
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5" />
             </pattern>
             <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -80,111 +65,51 @@ export function MapView({ active }: { active: boolean }) {
           </defs>
 
           {/* Background */}
-          <rect width="1000" height="600" fill="url(#mapBg)" />
+          <rect width="1000" height="600" fill="#000000" />
           <rect width="1000" height="600" fill="url(#grid)" />
 
-          {/* City boundary */}
+          {/* City boundary — very faint */}
           <path
             d="M 100 300 Q 200 180, 350 200 Q 500 150, 650 200 Q 800 180, 900 300 Q 920 400, 850 480 Q 700 520, 500 500 Q 300 510, 180 470 Q 90 400, 100 300 Z"
-            fill="#0a1a2e" stroke="#2a4f7a" strokeWidth="1" opacity={0.7}
+            fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1"
           />
 
-          {/* ── Highways ── */}
-
-          {/* Beltway 8 (Sam Houston Tollway) */}
+          {/* Highways — barely visible */}
           <ellipse cx="490" cy="372" rx="368" ry="213"
-            fill="none" stroke="#253a50" strokeWidth="2" strokeDasharray="8,5" opacity={0.5} />
-          <rect x="110" y="334" width="52" height="14" rx="3" fill="#152030" stroke="#253a50" strokeWidth="0.8" opacity={0.85} />
-          <text x="136" y="345" textAnchor="middle" fill="#4a7090" fontFamily="var(--mono)" fontSize="8" fontWeight="bold">Beltway 8</text>
-          <rect x="828" y="334" width="52" height="14" rx="3" fill="#152030" stroke="#253a50" strokeWidth="0.8" opacity={0.85} />
-          <text x="854" y="345" textAnchor="middle" fill="#4a7090" fontFamily="var(--mono)" fontSize="8" fontWeight="bold">Beltway 8</text>
-
-          {/* Loop 610 */}
+            fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="6,5" />
           <ellipse cx="488" cy="358" rx="198" ry="126"
-            fill="none" stroke="#2e4a64" strokeWidth="1.8" strokeDasharray="5,4" opacity={0.6} />
-          <rect x="278" y="345" width="44" height="14" rx="3" fill="#152030" stroke="#2e4a64" strokeWidth="0.8" opacity={0.85} />
-          <text x="300" y="356" textAnchor="middle" fill="#5a8aaa" fontFamily="var(--mono)" fontSize="8" fontWeight="bold">Loop 610</text>
-          <rect x="668" y="345" width="44" height="14" rx="3" fill="#152030" stroke="#2e4a64" strokeWidth="0.8" opacity={0.85} />
-          <text x="690" y="356" textAnchor="middle" fill="#5a8aaa" fontFamily="var(--mono)" fontSize="8" fontWeight="bold">Loop 610</text>
-
-          {/* I-10 (east-west through Houston) */}
+            fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
           <path d="M 10,316 Q 200,313 400,315 Q 470,316 540,317 Q 700,314 990,311"
-            stroke="#3a5570" strokeWidth="2.5" fill="none" strokeDasharray="10,4" opacity={0.55} />
-          <rect x="20" y="304" width="30" height="14" rx="3" fill="#1a2e40" stroke="#3a5570" strokeWidth="0.8" />
-          <text x="35" y="315" textAnchor="middle" fill="#5a90b8" fontFamily="var(--mono)" fontSize="8.5" fontWeight="bold">I-10</text>
-          <rect x="950" y="299" width="30" height="14" rx="3" fill="#1a2e40" stroke="#3a5570" strokeWidth="0.8" />
-          <text x="965" y="310" textAnchor="middle" fill="#5a90b8" fontFamily="var(--mono)" fontSize="8.5" fontWeight="bold">I-10</text>
-
-          {/* I-45 North (north from downtown) */}
+            stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" fill="none" />
           <path d="M 474,90 L 474,314"
-            stroke="#3a5570" strokeWidth="2.5" fill="none" strokeDasharray="10,4" opacity={0.5} />
-          <rect x="458" y="93" width="30" height="14" rx="3" fill="#1a2e40" stroke="#3a5570" strokeWidth="0.8" />
-          <text x="473" y="104" textAnchor="middle" fill="#5a90b8" fontFamily="var(--mono)" fontSize="8.5" fontWeight="bold">I-45</text>
-
-          {/* I-45 South (Gulf Freeway toward Galveston, SE direction) */}
+            stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" fill="none" />
           <path d="M 476,320 Q 530,398 592,456 Q 650,510 718,558"
-            stroke="#3a5570" strokeWidth="2" fill="none" strokeDasharray="10,4" opacity={0.4} />
-          <rect x="692" y="544" width="40" height="14" rx="3" fill="#1a2e40" stroke="#3a5570" strokeWidth="0.8" opacity={0.85} />
-          <text x="712" y="555" textAnchor="middle" fill="#5a90b8" fontFamily="var(--mono)" fontSize="8" fontWeight="bold">I-45 S</text>
+            stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
 
-          {/* ── Bayous ── */}
+          {/* Highway labels */}
+          <text x="136" y="326" textAnchor="middle" fill="rgba(255,255,255,0.18)" fontFamily="var(--mono)" fontSize="7">BELTWAY 8</text>
+          <text x="300" y="348" textAnchor="middle" fill="rgba(255,255,255,0.18)" fontFamily="var(--mono)" fontSize="7">610</text>
+          <text x="35" y="310" textAnchor="middle" fill="rgba(255,255,255,0.18)" fontFamily="var(--mono)" fontSize="7">I-10</text>
+          <text x="473" y="104" textAnchor="middle" fill="rgba(255,255,255,0.18)" fontFamily="var(--mono)" fontSize="7">I-45</text>
 
-          {/* Buffalo Bayou — main east-west channel through downtown */}
-          <path
-            d="M 20,358 Q 70,354 120,348 Q 180,338 240,332 Q 300,336 360,346 Q 420,360 480,366 Q 540,362 600,352 Q 660,346 720,350 Q 780,350 840,358 Q 900,364 980,361"
-            fill="none" stroke="url(#bayouGrad)" strokeWidth="8" opacity={0.7}
-          />
-          <path
-            d="M 20,358 Q 70,354 120,348 Q 180,338 240,332 Q 300,336 360,346 Q 420,360 480,366 Q 540,362 600,352 Q 660,346 720,350 Q 780,350 840,358 Q 900,364 980,361"
-            fill="none" stroke="#1a5fa8" strokeWidth="2" opacity={0.45}
-          />
-
-          {/* White Oak Bayou — northwest tributary merging into Buffalo */}
-          <path
-            d="M 55,192 Q 105,212 148,256 Q 185,276 222,270 Q 292,278 362,272 Q 432,266 502,265 Q 532,264 550,277 Q 522,302 492,322 Q 472,336 462,346"
-            fill="none" stroke="url(#bayouGrad)" strokeWidth="6" opacity={0.65}
-          />
-          <path
-            d="M 55,192 Q 105,212 148,256 Q 185,276 222,270 Q 292,278 362,272 Q 432,266 502,265 Q 532,264 550,277 Q 522,302 492,322 Q 472,336 462,346"
-            fill="none" stroke="#1a5fa8" strokeWidth="1.5" opacity={0.4}
-          />
-
-          {/* Brays Bayou — south of downtown */}
-          <path
-            d="M 20,450 Q 90,452 220,430 Q 290,438 360,444 Q 430,447 500,440 Q 570,434 640,427 Q 720,422 800,428 Q 880,432 980,427"
-            fill="none" stroke="url(#bayouGrad)" strokeWidth="6.5" opacity={0.68}
-          />
-          <path
-            d="M 20,450 Q 90,452 220,430 Q 290,438 360,444 Q 430,447 500,440 Q 570,434 640,427 Q 720,422 800,428 Q 880,432 980,427"
-            fill="none" stroke="#1a5fa8" strokeWidth="1.8" opacity={0.42}
-          />
-
-          {/* Greens Bayou — northeast Houston */}
-          <path
-            d="M 608,180 Q 648,214 674,252 Q 702,290 724,332 Q 750,370 792,384 Q 842,397 902,402"
-            fill="none" stroke="url(#bayouGrad)" strokeWidth="4.5" opacity={0.55}
-          />
-          <path
-            d="M 608,180 Q 648,214 674,252 Q 702,290 724,332 Q 750,370 792,384 Q 842,397 902,402"
-            fill="none" stroke="#1a5fa8" strokeWidth="1.2" opacity={0.35}
-          />
-
-          {/* Sims Bayou — further south */}
-          <path
-            d="M 290,512 Q 370,498 448,494 Q 548,490 638,500 Q 720,508 820,506"
-            fill="none" stroke="url(#bayouGrad)" strokeWidth="3.5" opacity={0.48}
-          />
-          <path
-            d="M 290,512 Q 370,498 448,494 Q 548,490 638,500 Q 720,508 820,506"
-            fill="none" stroke="#1a5fa8" strokeWidth="1" opacity={0.3}
-          />
+          {/* Bayous — subtle blue-gray */}
+          <path d="M 20,358 Q 70,354 120,348 Q 180,338 240,332 Q 300,336 360,346 Q 420,360 480,366 Q 540,362 600,352 Q 660,346 720,350 Q 780,350 840,358 Q 900,364 980,361"
+            fill="none" stroke="rgba(40,100,180,0.25)" strokeWidth="4" />
+          <path d="M 55,192 Q 105,212 148,256 Q 185,276 222,270 Q 292,278 362,272 Q 432,266 502,265 Q 532,264 550,277 Q 522,302 492,322 Q 472,336 462,346"
+            fill="none" stroke="rgba(40,100,180,0.2)" strokeWidth="3" />
+          <path d="M 20,450 Q 90,452 220,430 Q 290,438 360,444 Q 430,447 500,440 Q 570,434 640,427 Q 720,422 800,428 Q 880,432 980,427"
+            fill="none" stroke="rgba(40,100,180,0.22)" strokeWidth="3.5" />
+          <path d="M 608,180 Q 648,214 674,252 Q 702,290 724,332 Q 750,370 792,384 Q 842,397 902,402"
+            fill="none" stroke="rgba(40,100,180,0.16)" strokeWidth="2.5" />
+          <path d="M 290,512 Q 370,498 448,494 Q 548,490 638,500 Q 720,508 820,506"
+            fill="none" stroke="rgba(40,100,180,0.14)" strokeWidth="2" />
 
           {/* Bayou labels */}
-          <text x="192" y="327" fill="#4a6889" fontFamily="var(--mono)" fontSize="9" fontStyle="italic" transform="rotate(-3,192,327)">Buffalo Bayou</text>
-          <text x="238" y="260" fill="#4a6889" fontFamily="var(--mono)" fontSize="9" fontStyle="italic" transform="rotate(-2,238,260)">White Oak Bayou</text>
-          <text x="418" y="454" fill="#4a6889" fontFamily="var(--mono)" fontSize="9" fontStyle="italic">Brays Bayou</text>
-          <text x="670" y="268" fill="#3e5a70" fontFamily="var(--mono)" fontSize="8" fontStyle="italic" transform="rotate(52,670,268)">Greens Bayou</text>
-          <text x="448" y="506" fill="#3e5a70" fontFamily="var(--mono)" fontSize="8" fontStyle="italic">Sims Bayou</text>
+          <text x="192" y="325" fill="rgba(255,255,255,0.15)" fontFamily="var(--mono)" fontSize="8" fontStyle="italic" transform="rotate(-3,192,325)">Buffalo Bayou</text>
+          <text x="238" y="258" fill="rgba(255,255,255,0.15)" fontFamily="var(--mono)" fontSize="8" fontStyle="italic" transform="rotate(-2,238,258)">White Oak Bayou</text>
+          <text x="418" y="452" fill="rgba(255,255,255,0.15)" fontFamily="var(--mono)" fontSize="8" fontStyle="italic">Brays Bayou</text>
+          <text x="670" y="266" fill="rgba(255,255,255,0.1)" fontFamily="var(--mono)" fontSize="7" fontStyle="italic" transform="rotate(52,670,266)">Greens Bayou</text>
+          <text x="448" y="504" fill="rgba(255,255,255,0.1)" fontFamily="var(--mono)" fontSize="7" fontStyle="italic">Sims Bayou</text>
 
           {/* Neighborhoods */}
           {NEIGHBORHOODS.map(n => (
@@ -192,10 +117,10 @@ export function MapView({ active }: { active: boolean }) {
               key={n.id}
               x={n.x} y={n.y - 12}
               textAnchor="middle"
-              fill="#8ba9c8"
-              fontFamily="var(--body)"
-              fontSize="10"
-              fontWeight="600"
+              fill="rgba(255,255,255,0.2)"
+              fontFamily="var(--mono)"
+              fontSize="9"
+              letterSpacing="1"
             >
               {n.name.toUpperCase()}
             </text>
@@ -204,38 +129,32 @@ export function MapView({ active }: { active: boolean }) {
           {/* Live USGS/Harris County gauges at real GPS coordinates */}
           {liveGauges.map(s => {
             const { x, y } = latLngToSvg(s.lat!, s.lng!)
-            const color = s.level > 80 ? '#ff3860' : s.level > 60 ? '#ffb547' : '#00d97e'
+            const color = s.level > 80 ? '#ef4444' : s.level > 60 ? '#f59e0b' : '#22c55e'
             return (
               <g key={s.id}>
                 {/* Pulsing ring for critical */}
                 {s.level > 80 && (
-                  <circle cx={x} cy={y} r={5} fill={color} opacity={0.3}>
-                    <animate attributeName="r" from="5" to="20" dur="1.5s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" from="0.55" to="0" dur="1.5s" repeatCount="indefinite" />
+                  <circle cx={x} cy={y} r={5} fill={color} opacity={0.25}>
+                    <animate attributeName="r" from="5" to="22" dur="1.8s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" from="0.4" to="0" dur="1.8s" repeatCount="indefinite" />
                   </circle>
                 )}
-                {/* Outer ring for watch+ */}
-                {s.level > 60 && (
-                  <circle cx={x} cy={y} r={9}
-                    fill="none" stroke={color} strokeWidth="1"
-                    opacity={0.3}
-                  />
-                )}
+                {/* Subtle glow ring */}
+                <circle cx={x} cy={y} r={10}
+                  fill={color} opacity={0.08} />
                 {/* Main gauge dot */}
                 <circle
                   cx={x}
                   cy={y}
-                  r={6}
+                  r={5}
                   fill={color}
-                  stroke="#050b14"
+                  stroke="#000000"
                   strokeWidth="1.5"
                   filter="url(#glow)"
                   style={{ cursor: 'pointer' }}
                   onMouseEnter={() => handleSensorEnter(s, x, y)}
                   onMouseLeave={handleSensorLeave}
                 />
-                {/* Inner detail dot */}
-                <circle cx={x} cy={y} r={2.5} fill="#050b14" style={{ pointerEvents: 'none' }} />
               </g>
             )
           })}

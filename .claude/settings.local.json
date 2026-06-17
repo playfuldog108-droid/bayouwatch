@@ -17,7 +17,10 @@
       "Bash(npx tsc *)",
       "Bash(taskkill *)",
       "PowerShell(Stop-Process *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Skill(run)",
+      "WebFetch(domain:localhost)",
+      "Bash(curl -s http://localhost:3000)"
     ]
   }
 }

@@ -5,15 +5,13 @@ import { t } from '@/app/lib/i18n'
 import styles from './DashboardView.module.css'
 
 function buildChartPath(history: number[], w: number, h: number) {
-  if (history.length < 2) return { line: '', area: '' }
+  if (history.length < 2) return { line: '' }
   const points = history.map((v, i) => {
     const x = (i / (history.length - 1)) * w
     const y = h - (v / 100) * h
     return `${x},${y}`
   })
-  const line = 'M ' + points.join(' L ')
-  const area = line + ` L ${w},${h} L 0,${h} Z`
-  return { line, area }
+  return { line: 'M ' + points.join(' L ') }
 }
 
 export function DashboardView({ active }: { active: boolean }) {
@@ -39,7 +37,7 @@ export function DashboardView({ active }: { active: boolean }) {
     ? styles.cardWarn
     : styles.cardOk
 
-  const { line, area } = buildChartPath(chartHistory, 600, 200)
+  const { line } = buildChartPath(chartHistory, 600, 200)
 
   return (
     <div className={`${styles.view} ${active ? styles.active : ''}`}>
@@ -101,15 +99,8 @@ export function DashboardView({ active }: { active: boolean }) {
           </div>
           <div className={styles.chart}>
             <svg className={styles.chartSvg} viewBox="0 0 600 200" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#00e5ff" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="#00e5ff" stopOpacity={0} />
-                </linearGradient>
-              </defs>
               <line className={styles.thresholdLine} x1="0" y1="60" x2="600" y2="60" />
-              <text x="595" y="55" textAnchor="end" fill="#ff3860" fontFamily="var(--mono)" fontSize="9">FLOOD THRESHOLD</text>
-              <path d={area} fill="url(#chartGrad)" opacity={0.4} />
+              <text x="598" y="55" textAnchor="end" fill="rgba(239,68,68,0.6)" fontFamily="var(--mono)" fontSize="8" letterSpacing="1">FLOOD THRESHOLD</text>
               <path className={styles.chartLine} d={line} />
             </svg>
           </div>
