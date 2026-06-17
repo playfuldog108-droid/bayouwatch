@@ -33,11 +33,11 @@ export function HeroSection() {
           Real-time flood monitoring for Houston neighborhoods.{' '}
           47 sensors. Live data. 30–60 minute early warnings.
         </p>
-        <div className={styles.buttons}>
-          <button className={styles.btnPrimary} onClick={scrollToDashboard}>
+        <div className={styles.tabBar}>
+          <button className={styles.tabBtn} onClick={scrollToDashboard}>
             VIEW LIVE DASHBOARD
           </button>
-          <button className={styles.btnOutline} onClick={goToLookup}>
+          <button className={styles.tabBtn} onClick={goToLookup}>
             CHECK MY ADDRESS
           </button>
         </div>
