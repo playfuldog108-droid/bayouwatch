@@ -167,11 +167,11 @@ export function SimulationView({ active }: { active: boolean }) {
 
       <div className={styles.dashRow}>
         <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <div className={styles.panelTitle}>{t(currentLang, 'rainfallSim')}</div>
-            <div className={styles.panelTitle} style={{ color: running ? 'var(--accent-green)' : 'rgba(255,255,255,0.15)' }}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>{t(currentLang, 'rainfallSim')}</span>
+            <span className={styles.runStatus} style={{ color: running ? '#00FF88' : '#444444' }}>
               {running ? '● RUNNING' : 'PAUSED'}
-            </div>
+            </span>
           </div>
           <div className={styles.chart}>
             <svg className={styles.chartSvg} viewBox="0 0 600 200" preserveAspectRatio="none">
@@ -189,8 +189,8 @@ export function SimulationView({ active }: { active: boolean }) {
         </div>
 
         <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <div className={styles.panelTitle}>{t(currentLang, 'alertsTriggered')}</div>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>{t(currentLang, 'alertsTriggered')}</span>
           </div>
           <div className={styles.simAlertLog}>
             {simAlerts.map(a => (
@@ -205,9 +205,9 @@ export function SimulationView({ active }: { active: boolean }) {
         </div>
       </div>
 
-      <div className={`${styles.panel} ${styles.impactPanel}`}>
-        <div className={styles.panelHeader}>
-          <div className={styles.panelTitle}>{t(currentLang, 'impactStats')}</div>
+      <div className={styles.panel}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>{t(currentLang, 'impactStats')}</span>
         </div>
         <div className={styles.impactGrid}>
           <div className={styles.impactItem}>

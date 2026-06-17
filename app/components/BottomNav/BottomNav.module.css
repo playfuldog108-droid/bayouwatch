@@ -6,8 +6,10 @@
   .bottomNav {
     display: flex;
     grid-area: bottomnav;
-    background: #000000;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,8,20,0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
     z-index: 50;
   }
   .navBtn {
@@ -19,20 +21,14 @@
     gap: 4px;
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.25);
     cursor: pointer;
     padding: 6px 2px;
     transition: color 0.15s;
     min-width: 0;
   }
-  .navBtn.active {
-    color: #ffffff;
-  }
-  .icon {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
+  .navBtn.active { color: #ffffff; }
+  .icon { width:18px; height:18px; flex-shrink:0; }
   .label {
     font-family: var(--mono);
     font-size: 8px;

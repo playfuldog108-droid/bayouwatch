@@ -1,202 +1,186 @@
 .view {
   height: 100%;
   overflow-y: auto;
-  padding: 32px 36px;
+  padding: 40px 48px;
   display: none;
 }
 .view.active { display: block; }
-.viewHeader {
-  margin-bottom: 36px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-}
-.viewTitle {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 28px;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-  text-transform: uppercase;
-  color: #ffffff;
-}
-.viewSubtitle {
-  color: rgba(255,255,255,0.3);
-  font-size: 12px;
-  margin-top: 6px;
-  letter-spacing: 0.02em;
-}
 
-/* Stat cards — borderless, number-forward */
+/* ── KPI Strip ── */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0;
   margin-bottom: 48px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 48px;
 }
 .statCard {
-  padding: 28px 24px 24px;
+  padding: 0 40px 0 0;
+  margin-right: 0;
   border-right: 1px solid rgba(255,255,255,0.06);
+  padding-right: 40px;
 }
-.statCard:last-child { border-right: none; }
-.cardOk    {}
-.cardWarn  {}
-.cardAlert {}
+.statCard:first-child { padding-left: 0; }
+.statCard:last-child  { border-right: none; }
 .statLabel {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(255,255,255,0.25);
+  color: #888888;
   margin-bottom: 12px;
 }
 .statValue {
   font-family: var(--display);
-  font-size: 42px;
+  font-size: 72px;
   font-weight: 700;
-  line-height: 1;
-  margin-bottom: 8px;
+  line-height: 0.9;
   color: #ffffff;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
 }
+.numRed   { color: #FF3333; text-shadow: 0 0 20px rgba(255,51,51,0.3); }
+.numAmber { color: #FFB800; text-shadow: 0 0 20px rgba(255,184,0,0.3); }
 .statTrend {
-  font-family: var(--body);
-  font-size: 11px;
-  color: rgba(255,255,255,0.25);
+  font-size: 12px;
+  color: #888888;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.trendUp   { color: var(--accent-amber); }
-.trendDown { color: var(--accent-green); }
 .pulseDotGreen {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--accent-green);
+  width: 6px; height: 6px;
+  background: #00FF88;
   border-radius: 50%;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(0,255,136,0.6);
 }
 
-/* Chart + sensor panels */
-.dashRow {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 40px;
-  margin-bottom: 40px;
-}
-.panel {
-  background: transparent;
-}
-.panelHeader {
+/* ── Sections ── */
+.section { margin-bottom: 48px; }
+.sectionHeader {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
+  gap: 16px;
   margin-bottom: 20px;
 }
-.panelTitle {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
+.sectionTitle {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.1em;
+  color: #ffffff;
+}
+.sectionMeta {
+  font-size: 11px;
+  color: #888888;
+  font-family: var(--mono);
 }
 .liveBadge {
+  margin-left: auto;
   font-family: var(--mono);
   font-size: 9px;
-  color: rgba(255,255,255,0.18);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
+  color: #888888;
+  text-transform: uppercase;
 }
 
-/* Chart */
-.chart {
-  height: 160px;
-  position: relative;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
+/* ── Chart ── */
+.chart { height: 180px; position: relative; }
 .chartSvg { width: 100%; height: 100%; }
 .chartLine {
   fill: none;
   stroke: #ffffff;
-  stroke-width: 1.5;
+  stroke-width: 2.5;
   stroke-linejoin: round;
   stroke-linecap: round;
-}
-.thresholdLine {
-  stroke: var(--accent-red);
-  stroke-width: 1;
-  stroke-dasharray: 3 5;
-  opacity: 0.4;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
 }
 .chartLabels {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
   font-family: var(--mono);
-  font-size: 9px;
-  color: rgba(255,255,255,0.18);
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: #888888;
+}
+
+/* ── Bottom row ── */
+.dashRow {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 48px;
 }
 
 /* Sensor list */
-.sensorList {
-  max-height: 220px;
-  overflow-y: auto;
-}
 .sensorRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  font-family: var(--mono);
-  font-size: 11px;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 14px;
 }
 .sensorRow:last-child { border-bottom: none; }
 .sensorDot {
-  width: 5px;
-  height: 5px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.sensorId    { flex: 1; color: rgba(255,255,255,0.2); font-size: 10px; }
-.sensorName  { color: rgba(255,255,255,0.65); font-weight: 500; flex: 2; }
-.sensorLevel { font-weight: 700; width: 50px; text-align: right; }
+.sensorName {
+  flex: 1;
+  color: #ffffff;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.usgsTag {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: #888888;
+  letter-spacing: 0.06em;
+}
+.sensorLevel {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.stageFt { font-size: 11px; color: #888888; font-weight: 400; }
 
 /* Activity log */
-.activityLog {
-  font-family: var(--mono);
-  font-size: 11px;
-  max-height: 120px;
-  overflow-y: auto;
-}
+.activityLog { font-family: var(--mono); font-size: 12px; }
 .activityRow {
-  padding: 7px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   line-height: 1.4;
 }
 .activityRow:last-child { border-bottom: none; }
-.activityTime { color: rgba(255,255,255,0.2); }
+.activityTime { color: #888888; font-size: 10px; letter-spacing: 0.04em; }
 
+/* ── Responsive ── */
 @media (max-width: 1100px) {
+  .view { padding: 32px 32px; }
   .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .statCard { padding: 0 24px 24px 0; margin-bottom: 24px; }
+  .statValue { font-size: 56px; }
+  .dashRow { grid-template-columns: 1fr; gap: 32px; }
 }
 @media (max-width: 767px) {
-  .view { padding: 20px 16px; }
-  .viewTitle { font-size: 22px; }
-  .statsGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    margin-bottom: 32px;
-  }
-  .statCard { padding: 20px 16px; }
-  .statValue { font-size: 32px; }
-  .dashRow { grid-template-columns: 1fr; gap: 28px; margin-bottom: 28px; }
-  .sensorRow { font-size: 12px; }
-  .chartLabels { font-size: 10px; }
-  .activityLog { font-size: 12px; }
+  .view { padding: 24px 20px; }
+  .statsGrid { grid-template-columns: 1fr 1fr; padding-bottom: 28px; margin-bottom: 28px; }
+  .statCard { padding: 0 16px 20px 0; }
+  .statValue { font-size: 44px; }
+  .dashRow { gap: 24px; }
+  .section { margin-bottom: 32px; }
 }

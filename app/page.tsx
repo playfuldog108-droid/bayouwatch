@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { AppProvider } from '@/app/context/AppContext'
 import { useApp } from '@/app/context/AppContext'
 import { Header } from '@/app/components/Header/Header'
-import { Sidebar } from '@/app/components/Sidebar/Sidebar'
 import { RightPanel } from '@/app/components/RightPanel/RightPanel'
 import { CrisisBanner } from '@/app/components/CrisisBanner/CrisisBanner'
 import { DashboardView } from '@/app/components/views/DashboardView/DashboardView'
@@ -44,7 +43,6 @@ function AppShell() {
     <div className={styles.app}>
       <CrisisBanner />
       <Header />
-      <Sidebar />
       <main className={styles.main}>
         <DashboardView  active={currentView === 'dashboard'}  />
         <MapView        active={currentView === 'map'}        />
