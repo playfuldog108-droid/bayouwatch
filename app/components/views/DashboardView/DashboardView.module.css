@@ -142,7 +142,13 @@
 .usgsTag {
   font-family: var(--mono);
   font-size: 9px;
-  color: #888888;
+  color: #4a9eff;
+  letter-spacing: 0.06em;
+}
+.simTag {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: #555555;
   letter-spacing: 0.06em;
 }
 .sensorLevel {

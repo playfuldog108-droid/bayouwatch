@@ -123,7 +123,10 @@ export function DashboardView({ active }: { active: boolean }) {
                   <div className={styles.sensorDot} style={{ background: color }} />
                   <div className={styles.sensorName}>
                     {s.name}
-                    {s.hasRealData && <span className={styles.usgsTag}>USGS</span>}
+                    {s.hasRealData
+                      ? <span className={styles.usgsTag}>USGS</span>
+                      : <span className={styles.simTag}>SIM</span>
+                    }
                   </div>
                   <div className={styles.sensorLevel} style={{ color }}>
                     {s.level.toFixed(0)}%
