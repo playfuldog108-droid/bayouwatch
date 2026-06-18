@@ -39,9 +39,9 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
 }
 
 function AppShell() {
-  const { currentView } = useApp()
+  const { currentView, currentLang } = useApp()
   return (
-    <div className={styles.app}>
+    <div className={styles.app} dir={currentLang === 'ar' ? 'rtl' : 'ltr'}>
       <CrisisBanner />
       <Header />
       <main className={styles.main}>

@@ -2,15 +2,16 @@
 
 import { useApp } from '@/app/context/AppContext'
 import { t } from '@/app/lib/i18n'
-import type { AlertEntry } from '@/app/lib/types'
+import type { AlertEntry, Language } from '@/app/lib/types'
 import styles from './RightPanel.module.css'
 
-function AlertItem({ alert }: { alert: AlertEntry }) {
+function AlertItem({ alert, lang }: { alert: AlertEntry; lang: Language }) {
+  const severityKey = `alert${alert.severity.charAt(0).toUpperCase()}${alert.severity.slice(1)}` as 'alertCritical' | 'alertWarning' | 'alertInfo'
   return (
     <div className={`${styles.alertItem} ${styles[alert.severity]}`}>
       <div className={styles.alertMeta}>
         <span className={`${styles.alertSeverity} ${styles[alert.severity]}`}>
-          ● {alert.severity}
+          ● {t(lang, severityKey)}
         </span>
         <span>{alert.time}</span>
       </div>
@@ -35,10 +36,10 @@ export function RightPanel() {
       <div className={styles.alertsList}>
         {alerts.length === 0 ? (
           <div className={styles.emptyState}>
-            No active alerts.<br />System monitoring normally.
+            {t(currentLang, 'noAlerts')}<br />{t(currentLang, 'systemNormal')}
           </div>
         ) : (
-          alerts.map(a => <AlertItem key={a.id} alert={a} />)
+          alerts.map(a => <AlertItem key={a.id} alert={a} lang={currentLang} />)
         )}
       </div>
     </aside>

@@ -2,9 +2,10 @@
 
 import styles from './HeroSection.module.css'
 import { useApp } from '@/app/context/AppContext'
+import { t } from '@/app/lib/i18n'
 
 export function HeroSection() {
-  const { setCurrentView } = useApp()
+  const { setCurrentView, currentLang } = useApp()
 
   function scrollToDashboard() {
     document.getElementById('dashboard-section')?.scrollIntoView({ behavior: 'smooth' })
@@ -20,7 +21,7 @@ export function HeroSection() {
       <nav className={styles.heroNav}>
         <span className={styles.heroNavLogo}>BAYOUWATCH</span>
         <button className={styles.heroNavCta} onClick={scrollToDashboard}>
-          Live Dashboard →
+          {t(currentLang, 'heroLiveDashboard')}
         </button>
       </nav>
 
@@ -29,22 +30,19 @@ export function HeroSection() {
 
       <div className={styles.content}>
         <h1 className={styles.wordmark}>BAYOUWATCH</h1>
-        <p className={styles.subtitle}>
-          Real-time flood monitoring for Houston neighborhoods.{' '}
-          47 sensors. Live data. 30–60 minute early warnings.
-        </p>
+        <p className={styles.subtitle}>{t(currentLang, 'heroSubtitle')}</p>
         <div className={styles.tabBar}>
           <button className={styles.tabBtn} onClick={scrollToDashboard}>
-            VIEW LIVE DASHBOARD
+            {t(currentLang, 'heroCta1')}
           </button>
           <button className={styles.tabBtn} onClick={goToLookup}>
-            CHECK MY ADDRESS
+            {t(currentLang, 'heroCta2')}
           </button>
         </div>
       </div>
 
       <button className={styles.scrollHint} onClick={scrollToDashboard}>
-        SCROLL DOWN ↓
+        {t(currentLang, 'heroScrollHint')}
       </button>
     </section>
   )
